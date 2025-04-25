@@ -1,6 +1,6 @@
 # MonaChess - Ajedrez de Monas Chinas
 
-![Estado de Desarrollo](https://img.shields.io/badge/Estado-Versión%200.1.0-orange)
+![Estado de Desarrollo](https://img.shields.io/badge/Estado-Versión%200.2.0-yellow)
 ![Godot Version](https://img.shields.io/badge/Godot-v4.2%2B-blue)
 ![Licencia](https://img.shields.io/badge/Licencia-MIT-green)
 
@@ -8,13 +8,16 @@
 
 MonaChess es un juego de ajedrez con estética anime, desarrollado en Godot Engine 4.2+. Implementa todas las reglas estándar del ajedrez, combinadas con efectos visuales de estilo anime, múltiples temas visuales y un sistema de progresión.
 
-### 🚧 Estado Actual: Versión 0.1.0 - Tablero Funcional
+### 🚧 Estado Actual: Versión 0.2.0 - Piezas Básicas
 
 Esta versión incluye:
-- Implementación del tablero como matriz de datos 8x8
-- Representación visual básica del tablero (cuadrícula)
-- Sistema de coordenadas completo (A1-H8) con conversión entre notación de ajedrez y coordenadas internas
-- Lógica para posicionar elementos en el tablero
+- Clase base para piezas de ajedrez
+- Implementación de piezas básicas con sprites temporales
+  - Peón con movimientos básicos
+  - Rey con movimientos básicos
+- Posicionamiento inicial de piezas en el tablero
+- Sistema básico de selección y movimiento de piezas
+- Validación simple de movimientos legales
 
 ## 🎯 Características Planeadas
 
@@ -46,11 +49,13 @@ MonaChess/
 │   └── themes/        # Recursos de temas visuales
 ├── scenes/            # Escenas del juego
 │   ├── board/         # Escena del tablero y piezas
+│   │   └── pieces/    # Escenas para cada tipo de pieza
 │   ├── ui/            # Interfaces de usuario
 │   ├── game/          # Lógica principal del juego
 │   └── menus/         # Menús y pantallas
 ├── scripts/           # Scripts independientes
 │   ├── chess/         # Lógica de ajedrez
+│   │   └── pieces/    # Scripts para cada tipo de pieza
 │   ├── ai/            # IA y algoritmos
 │   ├── global/        # Autoloads y scripts globales
 │   └── utils/         # Utilidades y funciones auxiliares
@@ -95,8 +100,8 @@ MonaChess/
 ## 📝 Plan de Versiones
 
 - **0.0.0**: ✅ Estructura Base
-- **0.1.0**: ✅ Tablero Funcional (actual)
-- **0.2.0**: Piezas Básicas
+- **0.1.0**: ✅ Tablero Funcional
+- **0.2.0**: ✅ Piezas Básicas (actual)
 - **0.3.0**: Movimientos Básicos
 - **0.4.0**: Sistema de Turnos
 - **0.5.0**: Capturas
