@@ -2,7 +2,7 @@ extends Node2D
 
 # Tablero de ajedrez para MonaChess
 # Implementa un tablero 8x8 con coordenadas estándar (A1-H8)
-# Versión 0.2.0
+# Versión 0.3.0
 
 # Constantes de configuración del tablero
 const BOARD_SIZE = 8
@@ -15,9 +15,14 @@ const LIGHT_SQUARE_COLOR = Color(0.85, 0.85, 0.95, 1.0) # Blanco azulado
 # Colores para resaltar casillas
 const HIGHLIGHT_COLOR = Color(0.2, 0.8, 0.2, 0.4)  # Verde semi-transparente
 const SELECTED_COLOR = Color(0.9, 0.9, 0.2, 0.4)   # Amarillo semi-transparente
+const CAPTURE_COLOR = Color(0.9, 0.2, 0.2, 0.4)    # Rojo semi-transparente
 
 # Precarga de escenas de piezas
 const PAWN_SCENE = preload("res://scenes/board/pieces/Pawn.tscn")
+const KNIGHT_SCENE = preload("res://scenes/board/pieces/Knight.tscn")
+const BISHOP_SCENE = preload("res://scenes/board/pieces/Bishop.tscn")
+const ROOK_SCENE = preload("res://scenes/board/pieces/Rook.tscn")
+const QUEEN_SCENE = preload("res://scenes/board/pieces/Queen.tscn")
 const KING_SCENE = preload("res://scenes/board/pieces/King.tscn")
 
 # Matriz para representar el estado del tablero
@@ -30,8 +35,12 @@ var pieces = {}
 # Variable para la pieza seleccionada actualmente
 var selected_piece = null
 
+# Turno actual (blancas=0, negras=1)
+var current_turn = ChessPiece.PieceColor.WHITE
+
 # Nodos del tablero
 @onready var board_grid = $BoardContainer/Board
+@onready var turn_label = $TurnLabel
 
 # Función que se ejecuta cuando el nodo entra al árbol de escenas
 func _ready():
@@ -45,6 +54,9 @@ func _ready():
 	
 	# Configurar el inicio de las piezas
 	_setup_initial_pieces()
+	
+	# Inicializar etiqueta de turno
+	_update_turn_label()
 	
 	print("Tablero de ajedrez inicializado correctamente")
 
@@ -141,21 +153,46 @@ func set_square_value(notation: String, value: int) -> bool:
 
 # Configura las piezas en su posición inicial
 func _setup_initial_pieces():
-	# En la versión 0.2.0, colocaremos solo algunos peones y reyes
-	# como demostración de la funcionalidad
+	# Limpiar piezas existentes
+	for position in pieces:
+		if pieces[position] != null:
+			pieces[position].queue_free()
+	pieces.clear()
 	
 	# Crear peones blancos en segunda fila
 	for file in "abcdefgh":
 		var position = file + "2"
 		_create_piece(PAWN_SCENE, ChessPiece.PieceColor.WHITE, position)
 	
-	# Crear un peón negro en posición e7
-	_create_piece(PAWN_SCENE, ChessPiece.PieceColor.BLACK, "e7")
+	# Crear peones negros en séptima fila
+	for file in "abcdefgh":
+		var position = file + "7"
+		_create_piece(PAWN_SCENE, ChessPiece.PieceColor.BLACK, position)
 	
-	# Crear rey blanco en e1
+	# Crear torres
+	_create_piece(ROOK_SCENE, ChessPiece.PieceColor.WHITE, "a1")
+	_create_piece(ROOK_SCENE, ChessPiece.PieceColor.WHITE, "h1")
+	_create_piece(ROOK_SCENE, ChessPiece.PieceColor.BLACK, "a8")
+	_create_piece(ROOK_SCENE, ChessPiece.PieceColor.BLACK, "h8")
+	
+	# Crear caballos
+	_create_piece(KNIGHT_SCENE, ChessPiece.PieceColor.WHITE, "b1")
+	_create_piece(KNIGHT_SCENE, ChessPiece.PieceColor.WHITE, "g1")
+	_create_piece(KNIGHT_SCENE, ChessPiece.PieceColor.BLACK, "b8")
+	_create_piece(KNIGHT_SCENE, ChessPiece.PieceColor.BLACK, "g8")
+	
+	# Crear alfiles
+	_create_piece(BISHOP_SCENE, ChessPiece.PieceColor.WHITE, "c1")
+	_create_piece(BISHOP_SCENE, ChessPiece.PieceColor.WHITE, "f1")
+	_create_piece(BISHOP_SCENE, ChessPiece.PieceColor.BLACK, "c8")
+	_create_piece(BISHOP_SCENE, ChessPiece.PieceColor.BLACK, "f8")
+	
+	# Crear reinas
+	_create_piece(QUEEN_SCENE, ChessPiece.PieceColor.WHITE, "d1")
+	_create_piece(QUEEN_SCENE, ChessPiece.PieceColor.BLACK, "d8")
+	
+	# Crear reyes
 	_create_piece(KING_SCENE, ChessPiece.PieceColor.WHITE, "e1")
-	
-	# Crear rey negro en e8
 	_create_piece(KING_SCENE, ChessPiece.PieceColor.BLACK, "e8")
 	
 	print("Piezas iniciales colocadas en el tablero")
@@ -193,21 +230,34 @@ func _create_piece(scene, color, position):
 func select_piece(position: String) -> bool:
 	# Verificar si hay una pieza en la posición
 	if position in pieces:
+		var piece = pieces[position]
+		
+		# Verificar que la pieza corresponde al turno actual
+		if piece.piece_color != current_turn:
+			return false
+		
 		# Si ya hay una pieza seleccionada, deseleccionarla
 		if selected_piece:
 			selected_piece.set_selected(false)
 		
 		# Seleccionar la nueva pieza
-		selected_piece = pieces[position]
+		selected_piece = piece
 		selected_piece.set_selected(true)
 		
 		# Resaltar la casilla de la pieza seleccionada
 		_highlight_square(position, SELECTED_COLOR)
 		
 		# Resaltar movimientos posibles
-		var valid_moves = selected_piece.get_valid_moves()
+		var valid_moves = selected_piece.get_valid_moves(board_matrix)
 		for move in valid_moves:
-			_highlight_square(move, HIGHLIGHT_COLOR)
+			# Si hay una pieza en la casilla destino, resaltar como captura
+			if move in pieces:
+				var target_piece = pieces[move]
+				# Solo resaltar capturas de piezas enemigas
+				if target_piece.piece_color != piece.piece_color:
+					_highlight_square(move, CAPTURE_COLOR)
+			else:
+				_highlight_square(move, HIGHLIGHT_COLOR)
 		
 		return true
 	else:
@@ -255,10 +305,39 @@ func process_click(click_position: Vector2):
 		return
 	
 	# Si hay una pieza seleccionada, intentar moverla
-	if selected_piece and selected_piece.is_valid_move(notation):
-		move_piece(selected_piece.board_position, notation)
-		_clear_highlights()
-		selected_piece = null
+	if selected_piece:
+		var target_piece = pieces.get(notation)
+		
+		# Si hay una pieza en la posición de destino y es del mismo color, seleccionarla
+		if target_piece and target_piece.piece_color == current_turn:
+			select_piece(notation)
+			return
+		
+		# Intentar mover la pieza
+		if selected_piece.is_valid_move(notation, board_matrix):
+			# Verificar si la casilla tiene una pieza para capturar
+			if notation in pieces and pieces[notation] != null:
+				var piece_to_capture = pieces[notation]
+				# Solo capturar piezas del otro color
+				if piece_to_capture.piece_color != selected_piece.piece_color:
+					capture_piece(notation)
+				else:
+					return  # No se puede capturar una pieza propia
+			
+			# Mover la pieza
+			move_piece(selected_piece.board_position, notation)
+			
+			# Cambiar el turno
+			_change_turn()
+			
+			# Limpiar selección
+			selected_piece = null
+			_clear_highlights()
+		else:
+			# Si el movimiento no es válido, deseleccionar la pieza
+			selected_piece.set_selected(false)
+			selected_piece = null
+			_clear_highlights()
 	else:
 		# Seleccionar la pieza en la posición del clic
 		select_piece(notation)
@@ -292,11 +371,40 @@ func move_piece(from_position: String, to_position: String) -> bool:
 	
 	return true
 
+# Captura una pieza en la posición especificada
+func capture_piece(position: String) -> bool:
+	# Verificar que hay una pieza para capturar
+	if position not in pieces or pieces[position] == null:
+		return false
+	
+	var piece_to_capture = pieces[position]
+	
+	# Remover la pieza del tablero
+	piece_to_capture.queue_free()
+	
+	# Actualizar la matriz del tablero
+	set_square_value(position, 0)
+	
+	# Actualizar el diccionario de piezas
+	pieces.erase(position)
+	
+	return true
+
+# Cambia el turno actual
+func _change_turn():
+	current_turn = ChessPiece.PieceColor.BLACK if current_turn == ChessPiece.PieceColor.WHITE else ChessPiece.PieceColor.WHITE
+	_update_turn_label()
+
+# Actualiza la etiqueta de turno
+func _update_turn_label():
+	if turn_label:
+		turn_label.text = "Turno: " + ("Blancas" if current_turn == ChessPiece.PieceColor.WHITE else "Negras")
+
 # Imprime el estado actual del tablero en la consola (para depuración)
 func debug_print_board():
 	print("Estado actual del tablero:")
 	for row in range(BOARD_SIZE):
 		var row_str = ""
 		for col in range(BOARD_SIZE):
-			row_str += str(board_matrix[row][col]) + " "
+			row_str += str(board_matrix[row][col]) + "\t"
 		print(row_str)
