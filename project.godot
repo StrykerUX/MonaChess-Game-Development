@@ -15,7 +15,7 @@ config/description="Ajedrez de Monas Chinas - Un juego de ajedrez con estética 
 run/main_scene="res://scenes/Main.tscn"
 config/features=PackedStringArray("4.2")
 config/icon="res://icon.svg"
-config/version="0.1.0"
+config/version="0.2.0"
 
 [autoload]
 
