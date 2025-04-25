@@ -1,7 +1,7 @@
 extends Node
 
 # Script para la escena de prueba del tablero de ajedrez
-# MonaChess v0.1.0
+# MonaChess v0.2.0
 
 @onready var chess_board = $ChessBoard
 @onready var back_button = $BackButton
@@ -20,22 +20,16 @@ func _ready():
 	# Configuración inicial del tablero
 	if chess_board:
 		print("Tablero de ajedrez encontrado")
-		
-		# Prueba: establecer algunos valores en el tablero para demostrar funcionalidad
-		_setup_test_values()
 	else:
 		push_error("No se encontró el nodo del tablero de ajedrez")
 
-# Configura algunos valores de prueba en el tablero
-func _setup_test_values():
-	# En esta versión solo establecemos valores numéricos para demostrar la matriz
-	# En versiones futuras, serán reemplazados por instancias reales de piezas
-	
-	# Establecer algunas posiciones de ejemplo
-	chess_board.set_square_value("e4", 1)  # Por ejemplo, 1 podría representar un peón blanco
-	chess_board.set_square_value("e5", -1) # -1 podría representar un peón negro
-	chess_board.set_square_value("d4", 2)  # 2 podría ser una reina blanca
-	chess_board.set_square_value("f5", -3) # -3 podría ser un alfil negro
+# Función que se ejecuta en cada frame
+func _process(_delta):
+	# Verificar si se hizo clic en el tablero
+	if Input.is_action_just_pressed("ui_accept") or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		if chess_board:
+			# Pasar la posición del clic al tablero
+			chess_board.process_click(get_global_mouse_position())
 
 # Función que se ejecuta al presionar el botón de regresar
 func _on_back_button_pressed():
@@ -60,17 +54,15 @@ func _on_debug_button_pressed():
 		# Imprimir el estado actual del tablero en la consola
 		chess_board.debug_print_board()
 		
-		# Probar algunas conversiones de notación
-		_test_chess_notation()
+		# Información de las piezas en el tablero
+		_print_pieces_info()
 	else:
 		push_error("No se encontró el nodo del tablero de ajedrez")
 
-# Prueba algunas conversiones de notación de ajedrez
-func _test_chess_notation():
-	var test_positions = ["a1", "h8", "e4", "b7", "f2"]
-	
-	print("Prueba de conversión de notación de ajedrez:")
-	for pos in test_positions:
-		var board_pos = chess_board.get_board_position(pos)
-		var value = chess_board.get_square_value(pos)
-		print("Posición " + pos + " -> (" + str(board_pos.x) + ", " + str(board_pos.y) + ") = " + str(value))
+# Imprime información sobre las piezas en el tablero
+func _print_pieces_info():
+	if chess_board and chess_board.pieces:
+		print("Piezas en el tablero:")
+		for position in chess_board.pieces:
+			var piece = chess_board.pieces[position]
+			print("- " + piece.get_info())
