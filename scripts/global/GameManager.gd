@@ -1,7 +1,7 @@
 extends Node
 
 # Versión actual del juego
-const VERSION = "0.1.0"
+const VERSION = "0.2.0"
 
 # Enumeración para los estados del juego
 enum GameState {
