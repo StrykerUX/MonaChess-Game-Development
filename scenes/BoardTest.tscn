@@ -1,8 +1,10 @@
-[gd_scene load_steps=2 format=3 uid="uid://dphc14ytxnku5"]
+[gd_scene load_steps=3 format=3 uid="uid://dphc14ytxnku5"]
 
 [ext_resource type="PackedScene" uid="uid://c4qr3bjwgxd7h" path="res://scenes/board/ChessBoard.tscn" id="1_pfxxr"]
+[ext_resource type="Script" path="res://scripts/BoardTest.gd" id="1_tdrxb"]
 
 [node name="BoardTest" type="Node"]
+script = ExtResource("1_tdrxb")
 
 [node name="Title" type="Label" parent="."]
 anchors_preset = 5
