@@ -1,6 +1,6 @@
 # MonaChess - Ajedrez de Monas Chinas
 
-![Estado de Desarrollo](https://img.shields.io/badge/Estado-Versión%200.2.0-yellow)
+![Estado de Desarrollo](https://img.shields.io/badge/Estado-Versión%200.3.0-green)
 ![Godot Version](https://img.shields.io/badge/Godot-v4.2%2B-blue)
 ![Licencia](https://img.shields.io/badge/Licencia-MIT-green)
 
@@ -8,16 +8,21 @@
 
 MonaChess es un juego de ajedrez con estética anime, desarrollado en Godot Engine 4.2+. Implementa todas las reglas estándar del ajedrez, combinadas con efectos visuales de estilo anime, múltiples temas visuales y un sistema de progresión.
 
-### 🚧 Estado Actual: Versión 0.2.0 - Piezas Básicas
+### 🚧 Estado Actual: Versión 0.3.0 - Movimientos Básicos
 
 Esta versión incluye:
-- Clase base para piezas de ajedrez
-- Implementación de piezas básicas con sprites temporales
-  - Peón con movimientos básicos
-  - Rey con movimientos básicos
-- Posicionamiento inicial de piezas en el tablero
-- Sistema básico de selección y movimiento de piezas
-- Validación simple de movimientos legales
+- Implementación completa de todas las piezas de ajedrez:
+  - Peón 
+  - Torre
+  - Caballo
+  - Alfil
+  - Reina
+  - Rey
+- Validación de movimientos para cada tipo de pieza
+- Sistema de turnos alternados (blancas/negras)
+- Captura de piezas enemigas
+- Resaltado de movimientos válidos y capturas posibles
+- Tablero completo con posicionamiento inicial estándar
 
 ## 🎯 Características Planeadas
 
@@ -101,8 +106,8 @@ MonaChess/
 
 - **0.0.0**: ✅ Estructura Base
 - **0.1.0**: ✅ Tablero Funcional
-- **0.2.0**: ✅ Piezas Básicas (actual)
-- **0.3.0**: Movimientos Básicos
+- **0.2.0**: ✅ Piezas Básicas
+- **0.3.0**: ✅ Movimientos Básicos (actual)
 - **0.4.0**: Sistema de Turnos
 - **0.5.0**: Capturas
 - **0.6.0**: Reglas Básicas de Ajedrez
