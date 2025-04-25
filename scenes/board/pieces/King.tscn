@@ -1,0 +1,7 @@
+[gd_scene load_steps=3 format=3 uid="uid://cfmyy2ys6b8kj"]
+
+[ext_resource type="PackedScene" uid="uid://b81i0t3rqnv1e" path="res://scenes/board/pieces/ChessPiece.tscn" id="1_qqvfb"]
+[ext_resource type="Script" path="res://scripts/chess/pieces/King.gd" id="2_5k47e"]
+
+[node name="King" instance=ExtResource("1_qqvfb")]
+script = ExtResource("2_5k47e")
