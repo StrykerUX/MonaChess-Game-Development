@@ -1,105 +1,9 @@
-# Muestra un efecto visual de captura en la posición especificada
-func _show_capture_effect(position: String, piece_type: int, piece_color: int):
-	# Convertir la posición del tablero a coordenadas globales
-	var board_pos = get_board_position(position)
-	var effect_pos = Vector2(
-		board_pos.x * SQUARE_SIZE + SQUARE_SIZE / 2,
-		board_pos.y * SQUARE_SIZE + SQUARE_SIZE / 2
-	) + $BoardContainer.position
-	
-	# Crear un nodo para el efecto
-	var effect = Node2D.new()
-	effect.position = effect_pos
-	capture_effects_container.add_child(effect)
-	
-	# Efecto de partículas para la captura
-	var particles = CPUParticles2D.new()
-	particles.amount = 20
-	particles.lifetime = 0.6
-	particles.speed_scale = 2.0
-	particles.explosiveness = 0.8
-	particles.emission_shape = CPUParticles2D.EMISSION_SHAPE_CIRCLE
-	particles.emission_sphere_radius = 5.0
-	particles.spread = 180.0
-	particles.initial_velocity_min = 50.0
-	particles.initial_velocity_max = 150.0
-	particles.scale_amount_min = 3.0
-	particles.scale_amount_max = 6.0
-	
-	# Cambiar el color según el tipo de pieza y su color
-	var particle_color = Color(1.0, 0.3, 0.3) if piece_color == ChessPiece.PieceColor.BLACK else Color(0.3, 0.3, 1.0)
-	
-	# Ajustar intensidad del efecto según el valor de la pieza
-	var piece_value = PIECE_VALUES[piece_type]
-	if piece_value >= PIECE_VALUES[ChessPiece.PieceType.QUEEN]:
-		# Efecto más intenso para piezas importantes
-		particles.amount = 30
-		particles.lifetime = 0.8
-		particles.initial_velocity_max = 200.0
-		
-		# Añadir un segundo color para piezas importantes
-		particles.color = particle_color
-		particles.color_ramp = Gradient.new()
-		particles.color_ramp.colors = [particle_color, Color(1.0, 1.0, 0.3)]
-		particles.color_ramp.offsets = [0.0, 1.0]
-	else:
-		particles.color = particle_color
-	
-	effect.add_child(particles)
-	
-	# Efecto de texto "Captura!"
-	var capture_label = Label.new()
-	capture_label.text = "¡Captura!"
-	capture_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	capture_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	
-	# Estilo del texto
-	var font = FontFile.new()
-	capture_label.add_theme_font_override("font", load("res://assets/fonts/standard_font.tres"))
-	capture_label.add_theme_font_size_override("font_size", 18)
-	capture_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.2))
-	
-	# Posicionamiento del texto
-	capture_label.position = Vector2(-60, -30)
-	capture_label.size = Vector2(120, 40)
-	effect.add_child(capture_label)
-	
-	# Animación de desvanecimiento
-	var tween = create_tween()
-	tween.tween_property(effect, "modulate:a", 0.0, 1.0).set_delay(0.8)
-	tween.tween_callback(effect.queue_free)
-	
-	# Iniciar partículas
-	particles.emitting = true
-
-# Actualiza visualmente los paneles de piezas capturadas
-func _update_captured_panels():
-	# Reorganizar las piezas capturadas blancas
-	_arrange_captured_pieces(white_captured_pieces, white_captured_grid)
-	
-	# Reorganizar las piezas capturadas negras
-	_arrange_captured_pieces(black_captured_pieces, black_captured_grid)
-
-# Organiza las piezas capturadas en el grid correspondiente
-func _arrange_captured_pieces(captured_list: Array, grid: GridContainer):
-	# Ordenar primero por valor (más valioso primero)
-	captured_list.sort_custom(func(a, b): return a.value > b.value)
-	
-	# Posicionar cada pieza en el grid
-	for i in range(captured_list.size()):
-		var piece_data = captured_list[i]
-		var sprite = piece_data.sprite
-		
-		# Si el sprite ya tiene un padre, removerlo primero
-		if sprite.get_parent():
-			sprite.get_parent().remove_child(sprite)
-		
-		# Añadir al grid en la posición correcta
-		grid.add_child(sprite)extends Node2D
+extends Node2D
 
 # Tablero de ajedrez para MonaChess
 # Implementa un tablero 8x8 con coordenadas estándar (A1-H8)
-# Versión 0.5.0
+# Versión 0.6.0
+# Incluye detección de jaque y jaque mate
 
 # Constantes de configuración del tablero
 const BOARD_SIZE = 8
@@ -113,6 +17,7 @@ const LIGHT_SQUARE_COLOR = Color(0.85, 0.85, 0.95, 1.0) # Blanco azulado
 const HIGHLIGHT_COLOR = Color(0.2, 0.8, 0.2, 0.4)  # Verde semi-transparente
 const SELECTED_COLOR = Color(0.9, 0.9, 0.2, 0.4)   # Amarillo semi-transparente
 const CAPTURE_COLOR = Color(0.9, 0.2, 0.2, 0.4)    # Rojo semi-transparente
+const CHECK_COLOR = Color(1.0, 0.0, 0.0, 0.3)      # Rojo para destacar jaque
 
 # Valores de las piezas para cálculos y efectos
 const PIECE_VALUES = {
@@ -149,8 +54,18 @@ var selected_piece = null
 # Turno actual (blancas=0, negras=1)
 var current_turn = ChessPiece.PieceColor.WHITE
 
-# Señal emitida cuando cambia el turno
+# Estado del juego
+var is_game_active = true
+var is_white_in_check = false
+var is_black_in_check = false
+var white_king_position = "e1"
+var black_king_position = "e8"
+
+# Señales emitidas por el tablero
 signal turn_changed(new_turn)
+signal check_detected(color)
+signal checkmate_detected(winner_color)
+signal stalemate_detected
 
 # Nodos del tablero
 @onready var board_grid = $BoardContainer/Board
@@ -160,6 +75,8 @@ signal turn_changed(new_turn)
 @onready var white_captured_grid = $CapturedPiecesContainers/WhiteCapturedPanel/CapturedGrid
 @onready var black_captured_grid = $CapturedPiecesContainers/BlackCapturedPanel/CapturedGrid
 @onready var capture_effects_container = $CaptureEffectsContainer
+@onready var check_label = $GameStatusContainer/CheckLabel
+@onready var game_status_container = $GameStatusContainer
 
 # Función que se ejecuta cuando el nodo entra al árbol de escenas
 func _ready():
@@ -176,6 +93,10 @@ func _ready():
 	
 	# Inicializar etiqueta de turno
 	_update_turn_label()
+	
+	# Inicializar etiqueta de jaque
+	if check_label:
+		check_label.visible = false
 	
 	print("Tablero de ajedrez inicializado correctamente")
 
@@ -368,15 +289,28 @@ func select_piece(position: String) -> bool:
 		
 		# Resaltar movimientos posibles
 		var valid_moves = selected_piece.get_valid_moves(board_matrix)
+		var king_position = white_king_position if current_turn == ChessPiece.PieceColor.WHITE else black_king_position
+		
+		# Filtrar movimientos que dejarían al rey en jaque
+		var legal_moves = []
 		for move in valid_moves:
-			# Si hay una pieza en la casilla destino, resaltar como captura
-			if move in pieces:
-				var target_piece = pieces[move]
-				# Solo resaltar capturas de piezas enemigas
-				if target_piece.piece_color != piece.piece_color:
-					_highlight_square(move, CAPTURE_COLOR)
-			else:
-				_highlight_square(move, HIGHLIGHT_COLOR)
+			# Si la pieza que se mueve es el rey, actualizar la posición para la verificación
+			var check_king_position = move if piece.piece_type == ChessPiece.PieceType.KING else king_position
+			
+			if !ChessRules.would_move_cause_check(board_matrix, position, move, check_king_position, current_turn):
+				legal_moves.append(move)
+				# Si hay una pieza en la casilla destino, resaltar como captura
+				if move in pieces:
+					var target_piece = pieces[move]
+					# Solo resaltar capturas de piezas enemigas
+					if target_piece.piece_color != piece.piece_color:
+						_highlight_square(move, CAPTURE_COLOR)
+				else:
+					_highlight_square(move, HIGHLIGHT_COLOR)
+		
+		# Si no hay movimientos legales, mostrar un mensaje temporal
+		if legal_moves.empty() and valid_moves.size() > 0:
+			_show_temporary_message("Esta pieza no tiene movimientos legales disponibles")
 		
 		return true
 	else:
@@ -419,6 +353,10 @@ func _clear_highlights():
 
 # Procesa un clic en el tablero
 func process_click(click_position: Vector2):
+	# Si el juego ya terminó, no procesar más clics
+	if !is_game_active:
+		return
+	
 	var notation = get_notation_from_position(click_position)
 	if notation.is_empty():
 		return
@@ -442,6 +380,19 @@ func process_click(click_position: Vector2):
 		
 		# Intentar mover la pieza
 		if selected_piece.is_valid_move(notation, board_matrix):
+			# Verificar si el movimiento dejaría al rey en jaque
+			var king_position = white_king_position if current_turn == ChessPiece.PieceColor.WHITE else black_king_position
+			
+			# Si la pieza que se mueve es el rey, actualizar la posición para la verificación
+			if selected_piece.piece_type == ChessPiece.PieceType.KING:
+				king_position = notation
+			
+			if ChessRules.would_move_cause_check(board_matrix, selected_piece.board_position, notation, king_position, current_turn):
+				# Mostrar mensaje de advertencia
+				print("Movimiento ilegal: dejaría al rey en jaque")
+				_show_temporary_message("¡El rey quedaría en jaque!")
+				return
+			
 			# Verificar si la casilla tiene una pieza para capturar
 			if notation in pieces and pieces[notation] != null:
 				var piece_to_capture = pieces[notation]
@@ -454,8 +405,19 @@ func process_click(click_position: Vector2):
 			# Mover la pieza
 			move_piece(selected_piece.board_position, notation)
 			
-			# Cambiar el turno
-			_change_turn()
+			# Si la pieza movida es un rey, actualizar su posición
+			if selected_piece.piece_type == ChessPiece.PieceType.KING:
+				if selected_piece.piece_color == ChessPiece.PieceColor.WHITE:
+					white_king_position = notation
+				else:
+					black_king_position = notation
+			
+			# Verificar estado del juego (jaque, jaque mate, etc.)
+			_check_game_status()
+			
+			# Cambiar el turno solo si el juego sigue activo
+			if is_game_active:
+				_change_turn()
 			
 			# Limpiar selección
 			selected_piece = null
@@ -574,6 +536,9 @@ func _change_turn():
 	
 	# Efecto visual para indicar el cambio de turno
 	_highlight_turn_change()
+	
+	# Verificar estado del juego para el nuevo turno
+	_check_game_status()
 
 # Actualiza la etiqueta de turno con animación
 func _update_turn_label():
@@ -618,6 +583,234 @@ func _highlight_turn_change():
 		await timer.timeout
 		piece.modulate = original_modulate
 
+# Verificar el estado del juego (jaque, jaque mate, tablas)
+func _check_game_status():
+	# Verificar jaque para blancas
+	is_white_in_check = ChessRules.is_in_check(board_matrix, white_king_position, ChessPiece.PieceColor.WHITE)
+	
+	# Verificar jaque para negras
+	is_black_in_check = ChessRules.is_in_check(board_matrix, black_king_position, ChessPiece.PieceColor.BLACK)
+	
+	# Actualizar visualización de jaque
+	_update_check_status()
+	
+	# Verificar jaque mate o ahogado según el turno actual
+	if current_turn == ChessPiece.PieceColor.WHITE:
+		if is_white_in_check:
+			# Verificar jaque mate para blancas
+			if ChessRules.is_checkmate(board_matrix, white_king_position, ChessPiece.PieceColor.WHITE, pieces):
+				_show_checkmate(ChessPiece.PieceColor.BLACK)  # Las negras ganan
+				return
+		else:
+			# Verificar ahogado para blancas
+			if ChessRules.is_stalemate(board_matrix, white_king_position, ChessPiece.PieceColor.WHITE, pieces):
+				_show_stalemate()
+				return
+	else:
+		if is_black_in_check:
+			# Verificar jaque mate para negras
+			if ChessRules.is_checkmate(board_matrix, black_king_position, ChessPiece.PieceColor.BLACK, pieces):
+				_show_checkmate(ChessPiece.PieceColor.WHITE)  # Las blancas ganan
+				return
+		else:
+			# Verificar ahogado para negras
+			if ChessRules.is_stalemate(board_matrix, black_king_position, ChessPiece.PieceColor.BLACK, pieces):
+				_show_stalemate()
+				return
+
+# Actualiza la visualización del estado de jaque
+func _update_check_status():
+	# Actualizar estado visual para rey blanco
+	if is_white_in_check:
+		_highlight_square(white_king_position, CHECK_COLOR)
+		_show_check_message(ChessPiece.PieceColor.WHITE)
+	
+	# Actualizar estado visual para rey negro
+	if is_black_in_check:
+		_highlight_square(black_king_position, CHECK_COLOR)
+		_show_check_message(ChessPiece.PieceColor.BLACK)
+
+# Muestra un mensaje de jaque
+func _show_check_message(color: int):
+	if check_label:
+		check_label.text = "¡JAQUE al rey " + ("blanco" if color == ChessPiece.PieceColor.WHITE else "negro") + "!"
+		check_label.visible = true
+		
+		# Animar la etiqueta de jaque
+		var tween = create_tween()
+		check_label.modulate = Color(1, 0, 0, 1)
+		tween.tween_property(check_label, "modulate", Color(1, 1, 1, 1), 0.5)
+		
+		# Emitir señal de jaque detectado
+		emit_signal("check_detected", color)
+
+# Muestra un mensaje de jaque mate
+func _show_checkmate(winner_color: int):
+	is_game_active = false
+	
+	# Mostrar mensaje de jaque mate
+	if check_label:
+		check_label.text = "¡JAQUE MATE! Ganan las " + ("blancas" if winner_color == ChessPiece.PieceColor.WHITE else "negras")
+		check_label.visible = true
+		
+		# Animar la etiqueta de jaque mate
+		var tween = create_tween()
+		check_label.modulate = Color(1, 0, 0, 1)
+		tween.tween_property(check_label, "modulate", Color(1, 1, 1, 1), 0.5)
+		tween.tween_property(check_label, "modulate", Color(1, 0, 0, 1), 0.5)
+		tween.tween_property(check_label, "modulate", Color(1, 1, 1, 1), 0.5)
+	
+	# Aplicar efecto visual al rey perdedor
+	var loser_king_position = black_king_position if winner_color == ChessPiece.PieceColor.WHITE else white_king_position
+	_highlight_square(loser_king_position, CHECK_COLOR)
+	
+	# Emitir señal de jaque mate detectado
+	emit_signal("checkmate_detected", winner_color)
+	
+	# Mostrar efecto visual de victoria
+	_show_victory_effect(winner_color)
+
+# Muestra un mensaje de tablas (ahogado)
+func _show_stalemate():
+	is_game_active = false
+	
+	# Mostrar mensaje de tablas
+	if check_label:
+		check_label.text = "¡TABLAS! (Rey ahogado)"
+		check_label.visible = true
+	
+	# Emitir señal de tablas detectado
+	emit_signal("stalemate_detected")
+
+# Muestra un efecto de victoria para el color ganador
+func _show_victory_effect(winner_color: int):
+	# Aplicar efecto visual a todas las piezas del ganador
+	for position in pieces:
+		var piece = pieces[position]
+		if piece.piece_color == winner_color:
+			# Efecto de brillo para las piezas ganadoras
+			var tween = create_tween()
+			tween.tween_property(piece, "modulate", Color(1.5, 1.5, 0.5, 1), 0.5)
+			tween.tween_property(piece, "modulate", Color(1, 1, 1, 1), 0.5)
+			tween.set_loops(3)  # Repetir el efecto
+
+# Muestra un mensaje temporal en el tablero
+func _show_temporary_message(message: String):
+	if check_label:
+		# Guardar el texto y visibilidad originales
+		var original_text = check_label.text
+		var original_visible = check_label.visible
+		
+		# Mostrar el mensaje temporal
+		check_label.text = message
+		check_label.visible = true
+		
+		# Ocultar el mensaje después de un tiempo
+		var timer = get_tree().create_timer(2.0)
+		await timer.timeout
+		
+		# Restaurar el estado original solo si el juego sigue activo
+		if is_game_active:
+			check_label.text = original_text
+			check_label.visible = original_visible
+
+# Muestra un efecto visual de captura en la posición especificada
+func _show_capture_effect(position: String, piece_type: int, piece_color: int):
+	# Convertir la posición del tablero a coordenadas globales
+	var board_pos = get_board_position(position)
+	var effect_pos = Vector2(
+		board_pos.x * SQUARE_SIZE + SQUARE_SIZE / 2,
+		board_pos.y * SQUARE_SIZE + SQUARE_SIZE / 2
+	) + $BoardContainer.position
+	
+	# Crear un nodo para el efecto
+	var effect = Node2D.new()
+	effect.position = effect_pos
+	capture_effects_container.add_child(effect)
+	
+	# Efecto de partículas para la captura
+	var particles = CPUParticles2D.new()
+	particles.amount = 20
+	particles.lifetime = 0.6
+	particles.speed_scale = 2.0
+	particles.explosiveness = 0.8
+	particles.emission_shape = CPUParticles2D.EMISSION_SHAPE_CIRCLE
+	particles.emission_sphere_radius = 5.0
+	particles.spread = 180.0
+	particles.initial_velocity_min = 50.0
+	particles.initial_velocity_max = 150.0
+	particles.scale_amount_min = 3.0
+	particles.scale_amount_max = 6.0
+	
+	# Cambiar el color según el tipo de pieza y su color
+	var particle_color = Color(1.0, 0.3, 0.3) if piece_color == ChessPiece.PieceColor.BLACK else Color(0.3, 0.3, 1.0)
+	
+	# Ajustar intensidad del efecto según el valor de la pieza
+	var piece_value = PIECE_VALUES[piece_type]
+	if piece_value >= PIECE_VALUES[ChessPiece.PieceType.QUEEN]:
+		# Efecto más intenso para piezas importantes
+		particles.amount = 30
+		particles.lifetime = 0.8
+		particles.initial_velocity_max = 200.0
+		
+		# Añadir un segundo color para piezas importantes
+		particles.color = particle_color
+		particles.color_ramp = Gradient.new()
+		particles.color_ramp.colors = [particle_color, Color(1.0, 1.0, 0.3)]
+		particles.color_ramp.offsets = [0.0, 1.0]
+	else:
+		particles.color = particle_color
+	
+	effect.add_child(particles)
+	
+	# Efecto de texto "Captura!"
+	var capture_label = Label.new()
+	capture_label.text = "¡Captura!"
+	capture_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	capture_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	
+	# Estilo del texto
+	capture_label.add_theme_font_size_override("font_size", 18)
+	capture_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.2))
+	
+	# Posicionamiento del texto
+	capture_label.position = Vector2(-60, -30)
+	capture_label.size = Vector2(120, 40)
+	effect.add_child(capture_label)
+	
+	# Animación de desvanecimiento
+	var tween = create_tween()
+	tween.tween_property(effect, "modulate:a", 0.0, 1.0).set_delay(0.8)
+	tween.tween_callback(effect.queue_free)
+	
+	# Iniciar partículas
+	particles.emitting = true
+
+# Actualiza visualmente los paneles de piezas capturadas
+func _update_captured_panels():
+	# Reorganizar las piezas capturadas blancas
+	_arrange_captured_pieces(white_captured_pieces, white_captured_grid)
+	
+	# Reorganizar las piezas capturadas negras
+	_arrange_captured_pieces(black_captured_pieces, black_captured_grid)
+
+# Organiza las piezas capturadas en el grid correspondiente
+func _arrange_captured_pieces(captured_list: Array, grid: GridContainer):
+	# Ordenar primero por valor (más valioso primero)
+	captured_list.sort_custom(func(a, b): return a.value > b.value)
+	
+	# Posicionar cada pieza en el grid
+	for i in range(captured_list.size()):
+		var piece_data = captured_list[i]
+		var sprite = piece_data.sprite
+		
+		# Si el sprite ya tiene un padre, removerlo primero
+		if sprite.get_parent():
+			sprite.get_parent().remove_child(sprite)
+		
+		# Añadir al grid en la posición correcta
+		grid.add_child(sprite)
+
 # Imprime el estado actual del tablero en la consola (para depuración)
 func debug_print_board():
 	print("Estado actual del tablero:")
@@ -626,3 +819,9 @@ func debug_print_board():
 		for col in range(BOARD_SIZE):
 			row_str += str(board_matrix[row][col]) + "\t"
 		print(row_str)
+	
+	# Imprimir información adicional de estado
+	print("Rey blanco en: " + white_king_position + " (En jaque: " + str(is_white_in_check) + ")")
+	print("Rey negro en: " + black_king_position + " (En jaque: " + str(is_black_in_check) + ")")
+	print("Turno actual: " + ("Blancas" if current_turn == ChessPiece.PieceColor.WHITE else "Negras"))
+	print("Juego activo: " + str(is_game_active))

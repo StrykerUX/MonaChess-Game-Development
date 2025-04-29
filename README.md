@@ -1,6 +1,6 @@
 # MonaChess - Ajedrez de Monas Chinas
 
-![Estado de Desarrollo](https://img.shields.io/badge/Estado-Versión%200.5.0-green)
+![Estado de Desarrollo](https://img.shields.io/badge/Estado-Versión%200.6.0-green)
 ![Godot Version](https://img.shields.io/badge/Godot-v4.2%2B-blue)
 ![Licencia](https://img.shields.io/badge/Licencia-MIT-green)
 
@@ -8,19 +8,16 @@
 
 MonaChess es un juego de ajedrez con estética anime, desarrollado en Godot Engine 4.2+. Implementa todas las reglas estándar del ajedrez, combinadas con efectos visuales de estilo anime, múltiples temas visuales y un sistema de progresión.
 
-### 🚧 Estado Actual: Versión 0.5.0 - Sistema de Capturas
+### 🚧 Estado Actual: Versión 0.6.0 - Reglas Básicas de Ajedrez
 
 Esta versión incluye:
-- Implementación completa de todas las piezas de ajedrez
-- Validación de movimientos para cada tipo de pieza
-- Sistema mejorado de turnos alternados (blancas/negras)
-- Sistema de capturas avanzado:
-  - Visualización de piezas capturadas en paneles laterales
-  - Efectos visuales de captura con partículas y animaciones
-  - Diferenciación de capturas por valor de pieza
-  - Sistema de puntuación basado en capturas
-- Reglas básicas de capturas con validación
-- Tablero completo con posicionamiento inicial estándar
+- Implementación completa del sistema de detección de jaque
+- Validación avanzada de movimientos para prevenir jaque al rey propio
+- Detección de jaque mate con finalización automática del juego
+- Detección de ahogado (stalemate) como condición de tablas
+- Efectos visuales mejorados para situaciones de jaque y mate
+- Sistema de mensajes de estado del juego
+- Interfaz actualizada para mostrar eventos importantes
 
 ## 🎯 Características Planeadas
 
@@ -107,8 +104,8 @@ MonaChess/
 - **0.2.0**: ✅ Piezas Básicas
 - **0.3.0**: ✅ Movimientos Básicos
 - **0.4.0**: ✅ Sistema de Turnos
-- **0.5.0**: ✅ Capturas (actual)
-- **0.6.0**: Reglas Básicas de Ajedrez
+- **0.5.0**: ✅ Capturas
+- **0.6.0**: ✅ Reglas Básicas de Ajedrez (actual)
 - **0.7.0**: UI Mínima Funcional
 - **0.8.0**: MVP Jugable
 - **1.0.0**: MVP Completo

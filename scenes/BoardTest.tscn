@@ -16,7 +16,7 @@ offset_right = 246.0
 offset_bottom = 54.0
 grow_horizontal = 2
 theme_override_font_sizes/font_size = 24
-text = "MonaChess - Tablero de Ajedrez (v0.1.0)"
+text = "MonaChess - Tablero de Ajedrez (v0.6.0)"
 horizontal_alignment = 1
 
 [node name="ChessBoard" parent="." instance=ExtResource("1_pfxxr")]

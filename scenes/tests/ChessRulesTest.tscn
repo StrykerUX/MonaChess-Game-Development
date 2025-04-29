@@ -1,0 +1,138 @@
+[gd_scene load_steps=3 format=3 uid="uid://ce7y4ngnj3vq3"]
+
+[ext_resource type="Script" path="res://scripts/tests/ChessRulesTest.gd" id="1_e3nmw"]
+[ext_resource type="PackedScene" uid="uid://c4qr3bjwgxd7h" path="res://scenes/board/ChessBoard.tscn" id="2_7ycbg"]
+
+[node name="ChessRulesTest" type="Node"]
+script = ExtResource("1_e3nmw")
+
+[node name="Title" type="Label" parent="."]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -350.0
+offset_top = 20.0
+offset_right = 350.0
+offset_bottom = 54.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 24
+text = "MonaChess v0.6.0 - Prueba de Reglas de Ajedrez"
+horizontal_alignment = 1
+
+[node name="Instructions" type="Label" parent="."]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -400.0
+offset_top = 60.0
+offset_right = 400.0
+offset_bottom = 110.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 16
+text = "Presione teclas 1-4 para seleccionar una prueba
+Presione ENTER para avanzar al siguiente paso de la prueba"
+horizontal_alignment = 1
+
+[node name="ChessBoard" parent="." instance=ExtResource("2_7ycbg")]
+position = Vector2(340, 150)
+
+[node name="TestSelectionPanel" type="Panel" parent="."]
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -180.0
+offset_right = -50.0
+offset_bottom = 200.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="TestsList" type="VBoxContainer" parent="TestSelectionPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="TestSelectionPanel/TestsList"]
+layout_mode = 2
+text = "Pruebas Disponibles:"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="TestSelectionPanel/TestsList"]
+layout_mode = 2
+
+[node name="Test1" type="Label" parent="TestSelectionPanel/TestsList"]
+layout_mode = 2
+text = "1 - Jaque Simple"
+
+[node name="Test2" type="Label" parent="TestSelectionPanel/TestsList"]
+layout_mode = 2
+text = "2 - Jaque Mate del Pastor"
+
+[node name="Test3" type="Label" parent="TestSelectionPanel/TestsList"]
+layout_mode = 2
+text = "3 - Escape de Jaque"
+
+[node name="Test4" type="Label" parent="TestSelectionPanel/TestsList"]
+layout_mode = 2
+text = "4 - Movimiento Ilegal"
+
+[node name="ResultsPanel" type="Panel" parent="."]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -325.0
+offset_top = -150.0
+offset_right = 325.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="ResultsTitle" type="Label" parent="ResultsPanel"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -45.0
+offset_top = 10.0
+offset_right = 45.0
+offset_bottom = 36.0
+grow_horizontal = 2
+text = "Resultados:"
+horizontal_alignment = 1
+
+[node name="ResultsText" type="Label" parent="ResultsPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 40.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "Seleccione una prueba para comenzar (teclas 1-4)"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BackButton" type="Button" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -120.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = 51.0
+grow_horizontal = 0
+text = "Volver"
