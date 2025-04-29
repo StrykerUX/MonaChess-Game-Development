@@ -1,8 +1,105 @@
-extends Node2D
+# Muestra un efecto visual de captura en la posición especificada
+func _show_capture_effect(position: String, piece_type: int, piece_color: int):
+	# Convertir la posición del tablero a coordenadas globales
+	var board_pos = get_board_position(position)
+	var effect_pos = Vector2(
+		board_pos.x * SQUARE_SIZE + SQUARE_SIZE / 2,
+		board_pos.y * SQUARE_SIZE + SQUARE_SIZE / 2
+	) + $BoardContainer.position
+	
+	# Crear un nodo para el efecto
+	var effect = Node2D.new()
+	effect.position = effect_pos
+	capture_effects_container.add_child(effect)
+	
+	# Efecto de partículas para la captura
+	var particles = CPUParticles2D.new()
+	particles.amount = 20
+	particles.lifetime = 0.6
+	particles.speed_scale = 2.0
+	particles.explosiveness = 0.8
+	particles.emission_shape = CPUParticles2D.EMISSION_SHAPE_CIRCLE
+	particles.emission_sphere_radius = 5.0
+	particles.spread = 180.0
+	particles.initial_velocity_min = 50.0
+	particles.initial_velocity_max = 150.0
+	particles.scale_amount_min = 3.0
+	particles.scale_amount_max = 6.0
+	
+	# Cambiar el color según el tipo de pieza y su color
+	var particle_color = Color(1.0, 0.3, 0.3) if piece_color == ChessPiece.PieceColor.BLACK else Color(0.3, 0.3, 1.0)
+	
+	# Ajustar intensidad del efecto según el valor de la pieza
+	var piece_value = PIECE_VALUES[piece_type]
+	if piece_value >= PIECE_VALUES[ChessPiece.PieceType.QUEEN]:
+		# Efecto más intenso para piezas importantes
+		particles.amount = 30
+		particles.lifetime = 0.8
+		particles.initial_velocity_max = 200.0
+		
+		# Añadir un segundo color para piezas importantes
+		particles.color = particle_color
+		particles.color_ramp = Gradient.new()
+		particles.color_ramp.colors = [particle_color, Color(1.0, 1.0, 0.3)]
+		particles.color_ramp.offsets = [0.0, 1.0]
+	else:
+		particles.color = particle_color
+	
+	effect.add_child(particles)
+	
+	# Efecto de texto "Captura!"
+	var capture_label = Label.new()
+	capture_label.text = "¡Captura!"
+	capture_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	capture_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	
+	# Estilo del texto
+	var font = FontFile.new()
+	capture_label.add_theme_font_override("font", load("res://assets/fonts/standard_font.tres"))
+	capture_label.add_theme_font_size_override("font_size", 18)
+	capture_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.2))
+	
+	# Posicionamiento del texto
+	capture_label.position = Vector2(-60, -30)
+	capture_label.size = Vector2(120, 40)
+	effect.add_child(capture_label)
+	
+	# Animación de desvanecimiento
+	var tween = create_tween()
+	tween.tween_property(effect, "modulate:a", 0.0, 1.0).set_delay(0.8)
+	tween.tween_callback(effect.queue_free)
+	
+	# Iniciar partículas
+	particles.emitting = true
+
+# Actualiza visualmente los paneles de piezas capturadas
+func _update_captured_panels():
+	# Reorganizar las piezas capturadas blancas
+	_arrange_captured_pieces(white_captured_pieces, white_captured_grid)
+	
+	# Reorganizar las piezas capturadas negras
+	_arrange_captured_pieces(black_captured_pieces, black_captured_grid)
+
+# Organiza las piezas capturadas en el grid correspondiente
+func _arrange_captured_pieces(captured_list: Array, grid: GridContainer):
+	# Ordenar primero por valor (más valioso primero)
+	captured_list.sort_custom(func(a, b): return a.value > b.value)
+	
+	# Posicionar cada pieza en el grid
+	for i in range(captured_list.size()):
+		var piece_data = captured_list[i]
+		var sprite = piece_data.sprite
+		
+		# Si el sprite ya tiene un padre, removerlo primero
+		if sprite.get_parent():
+			sprite.get_parent().remove_child(sprite)
+		
+		# Añadir al grid en la posición correcta
+		grid.add_child(sprite)extends Node2D
 
 # Tablero de ajedrez para MonaChess
 # Implementa un tablero 8x8 con coordenadas estándar (A1-H8)
-# Versión 0.4.0
+# Versión 0.5.0
 
 # Constantes de configuración del tablero
 const BOARD_SIZE = 8
@@ -16,6 +113,16 @@ const LIGHT_SQUARE_COLOR = Color(0.85, 0.85, 0.95, 1.0) # Blanco azulado
 const HIGHLIGHT_COLOR = Color(0.2, 0.8, 0.2, 0.4)  # Verde semi-transparente
 const SELECTED_COLOR = Color(0.9, 0.9, 0.2, 0.4)   # Amarillo semi-transparente
 const CAPTURE_COLOR = Color(0.9, 0.2, 0.2, 0.4)    # Rojo semi-transparente
+
+# Valores de las piezas para cálculos y efectos
+const PIECE_VALUES = {
+	ChessPiece.PieceType.PAWN: 1,
+	ChessPiece.PieceType.KNIGHT: 3,
+	ChessPiece.PieceType.BISHOP: 3,
+	ChessPiece.PieceType.ROOK: 5,
+	ChessPiece.PieceType.QUEEN: 9,
+	ChessPiece.PieceType.KING: 100
+}
 
 # Precarga de escenas de piezas
 const PAWN_SCENE = preload("res://scenes/board/pieces/Pawn.tscn")
@@ -32,6 +139,10 @@ var board_matrix = []
 # Diccionario para mantener referencias a las piezas en el tablero
 var pieces = {}
 
+# Listas para piezas capturadas
+var white_captured_pieces = []
+var black_captured_pieces = []
+
 # Variable para la pieza seleccionada actualmente
 var selected_piece = null
 
@@ -46,6 +157,9 @@ signal turn_changed(new_turn)
 @onready var turn_indicator = $TurnIndicator
 @onready var turn_label = $TurnIndicator/TurnLabel
 @onready var turn_background = $TurnIndicator/TurnBackground
+@onready var white_captured_grid = $CapturedPiecesContainers/WhiteCapturedPanel/CapturedGrid
+@onready var black_captured_grid = $CapturedPiecesContainers/BlackCapturedPanel/CapturedGrid
+@onready var capture_effects_container = $CaptureEffectsContainer
 
 # Función que se ejecuta cuando el nodo entra al árbol de escenas
 func _ready():
@@ -401,14 +515,52 @@ func capture_piece(position: String) -> bool:
 	
 	var piece_to_capture = pieces[position]
 	
-	# Remover la pieza del tablero
-	piece_to_capture.queue_free()
+	# Determinar qué jugador capturó la pieza
+	var captured_by_white = piece_to_capture.piece_color == ChessPiece.PieceColor.BLACK
+	
+	# Guardar referencia a la pieza capturada antes de eliminarla del tablero
+	var captured_piece_type = piece_to_capture.piece_type
+	var captured_piece_value = piece_to_capture.get_value()
+	var captured_piece_color = piece_to_capture.piece_color
+	var capture_position = position
+	
+	# Mostrar efecto de captura
+	_show_capture_effect(position, captured_piece_type, captured_piece_color)
 	
 	# Actualizar la matriz del tablero
 	set_square_value(position, 0)
 	
+	# Crear una copia visual para mostrar en el panel de capturas
+	var captured_piece_sprite = Sprite2D.new()
+	captured_piece_sprite.texture = piece_to_capture.get_node("Sprite2D").texture
+	captured_piece_sprite.scale = Vector2(0.4, 0.4) # Reducir tamaño para el panel
+	
+	# Añadir la pieza capturada a la lista correspondiente
+	if captured_by_white:
+		white_captured_pieces.append({
+			"type": captured_piece_type,
+			"value": captured_piece_value,
+			"position": capture_position,
+			"sprite": captured_piece_sprite
+		})
+		white_captured_grid.add_child(captured_piece_sprite)
+	else:
+		black_captured_pieces.append({
+			"type": captured_piece_type,
+			"value": captured_piece_value,
+			"position": capture_position,
+			"sprite": captured_piece_sprite
+		})
+		black_captured_grid.add_child(captured_piece_sprite)
+	
+	# Remover la pieza original del tablero
+	piece_to_capture.queue_free()
+	
 	# Actualizar el diccionario de piezas
 	pieces.erase(position)
+	
+	# Actualizar visualmente los paneles de piezas capturadas
+	_update_captured_panels()
 	
 	return true
 

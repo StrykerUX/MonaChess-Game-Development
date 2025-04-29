@@ -1,7 +1,7 @@
 extends Node
 
 # Script para la escena de prueba del tablero de ajedrez
-# MonaChess v0.4.0
+# MonaChess v0.5.0
 
 @onready var chess_board = $ChessBoard
 @onready var back_button = $BackButton
