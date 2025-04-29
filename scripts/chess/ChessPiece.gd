@@ -2,7 +2,7 @@ extends Node2D
 class_name ChessPiece
 
 # Clase base para todas las piezas de ajedrez en MonaChess
-# Versión 0.2.0
+# Versión 0.4.0
 
 # Enumeración para los tipos de piezas
 enum PieceType {

@@ -172,14 +172,32 @@ offset_top = 580.0
 offset_right = 375.0
 offset_bottom = 606.0
 theme_override_fonts/font = ExtResource("2_fdxo3")
-text = "Tablero de Ajedrez - MonaChess v0.3.0"
+text = "Tablero de Ajedrez - MonaChess v0.4.0"
 horizontal_alignment = 1
 
-[node name="TurnLabel" type="Label" parent="."]
+[node name="TurnIndicator" type="Control" parent="."]
 offset_left = 375.0
 offset_top = 580.0
 offset_right = 570.0
 offset_bottom = 606.0
+
+[node name="TurnBackground" type="ColorRect" parent="TurnIndicator"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.2, 0.2, 0.2, 0.5)
+
+[node name="TurnLabel" type="Label" parent="TurnIndicator"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_fonts/font = ExtResource("2_fdxo3")
 text = "Turno: Blancas"
 horizontal_alignment = 1
+vertical_alignment = 1

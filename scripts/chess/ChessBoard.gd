@@ -2,7 +2,7 @@ extends Node2D
 
 # Tablero de ajedrez para MonaChess
 # Implementa un tablero 8x8 con coordenadas estándar (A1-H8)
-# Versión 0.3.0
+# Versión 0.4.0
 
 # Constantes de configuración del tablero
 const BOARD_SIZE = 8
@@ -38,9 +38,14 @@ var selected_piece = null
 # Turno actual (blancas=0, negras=1)
 var current_turn = ChessPiece.PieceColor.WHITE
 
+# Señal emitida cuando cambia el turno
+signal turn_changed(new_turn)
+
 # Nodos del tablero
 @onready var board_grid = $BoardContainer/Board
-@onready var turn_label = $TurnLabel
+@onready var turn_indicator = $TurnIndicator
+@onready var turn_label = $TurnIndicator/TurnLabel
+@onready var turn_background = $TurnIndicator/TurnBackground
 
 # Función que se ejecuta cuando el nodo entra al árbol de escenas
 func _ready():
@@ -313,6 +318,14 @@ func process_click(click_position: Vector2):
 			select_piece(notation)
 			return
 		
+		# Verificar que la pieza seleccionada corresponde al turno actual
+		if selected_piece.piece_color != current_turn:
+			print("Error: No es el turno de esta pieza")
+			selected_piece.set_selected(false)
+			selected_piece = null
+			_clear_highlights()
+			return
+		
 		# Intentar mover la pieza
 		if selected_piece.is_valid_move(notation, board_matrix):
 			# Verificar si la casilla tiene una pieza para capturar
@@ -339,6 +352,15 @@ func process_click(click_position: Vector2):
 			selected_piece = null
 			_clear_highlights()
 	else:
+		# Intentar seleccionar la pieza en la posición del clic
+		if notation in pieces:
+			var piece = pieces[notation]
+			
+			# Verificar que la pieza corresponde al turno actual
+			if piece.piece_color != current_turn:
+				print("No es tu turno: " + ("Esperando blancas" if current_turn == ChessPiece.PieceColor.WHITE else "Esperando negras"))
+				return
+		
 		# Seleccionar la pieza en la posición del clic
 		select_piece(notation)
 
@@ -394,11 +416,55 @@ func capture_piece(position: String) -> bool:
 func _change_turn():
 	current_turn = ChessPiece.PieceColor.BLACK if current_turn == ChessPiece.PieceColor.WHITE else ChessPiece.PieceColor.WHITE
 	_update_turn_label()
+	
+	# Emitir señal de cambio de turno
+	emit_signal("turn_changed", current_turn)
+	
+	# Efecto visual para indicar el cambio de turno
+	_highlight_turn_change()
 
-# Actualiza la etiqueta de turno
+# Actualiza la etiqueta de turno con animación
 func _update_turn_label():
-	if turn_label:
-		turn_label.text = "Turno: " + ("Blancas" if current_turn == ChessPiece.PieceColor.WHITE else "Negras")
+	if turn_label and turn_background:
+		var turn_text = "Turno: " + ("Blancas" if current_turn == ChessPiece.PieceColor.WHITE else "Negras")
+		turn_label.text = turn_text
+		
+		# Colores según el turno
+		var bg_color = Color(0.9, 0.9, 0.9, 0.7) if current_turn == ChessPiece.PieceColor.WHITE else Color(0.2, 0.2, 0.2, 0.7)
+		var text_color = Color(0.1, 0.1, 0.1) if current_turn == ChessPiece.PieceColor.WHITE else Color(0.9, 0.9, 0.9)
+		
+		# Animación de cambio de color
+		var tween = create_tween()
+		tween.tween_property(turn_background, "color", bg_color, 0.3)
+		
+		# Actualizar color de la etiqueta
+		turn_label.add_theme_color_override("font_color", text_color)
+		
+		# Efecto de parpadeo para indicar cambio de turno
+		tween.tween_property(turn_indicator, "modulate:a", 0.5, 0.2)
+		tween.tween_property(turn_indicator, "modulate:a", 1.0, 0.2)
+
+# Destaca visualmente el cambio de turno
+func _highlight_turn_change():
+	# Obtener todas las piezas del color del turno actual
+	var current_color_pieces = []
+	for position in pieces:
+		var piece = pieces[position]
+		if piece.piece_color == current_turn:
+			current_color_pieces.append(piece)
+	
+	# Crear un efecto de resaltado temporal para las piezas del turno actual
+	for piece in current_color_pieces:
+		# Guardar modulación original
+		var original_modulate = piece.modulate
+		
+		# Aplicar efecto de brillo
+		piece.modulate = Color(1.3, 1.3, 1.3, 1.0) if current_turn == ChessPiece.PieceColor.WHITE else Color(0.7, 0.7, 0.9, 1.0)
+		
+		# Crear temporizador para restaurar el color original
+		var timer = get_tree().create_timer(0.5)
+		await timer.timeout
+		piece.modulate = original_modulate
 
 # Imprime el estado actual del tablero en la consola (para depuración)
 func debug_print_board():
