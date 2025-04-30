@@ -1,0 +1,329 @@
+[gd_scene load_steps=2 format=3 uid="uid://cggcyjm15qsvq"]
+
+[ext_resource type="Script" path="res://scripts/ui/SettingsMenu.gd" id="1_7vc2n"]
+
+[node name="SettingsMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_7vc2n")
+
+[node name="Background" type="ColorRect"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.501961)
+
+[node name="PanelContainer" type="PanelContainer"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -350.0
+offset_top = -250.0
+offset_right = 350.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="SettingsTitle" type="Label"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "Ajustes"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator"]
+layout_mode = 2
+
+[node name="SettingsTabs" type="TabContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VideoTab" type="TabBar"]
+layout_mode = 2
+tab_title = "Video"
+
+[node name="VBoxContainer" type="VBoxContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="FullscreenContainer" type="HBoxContainer"]
+layout_mode = 2
+
+[node name="FullscreenLabel" type="Label"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Pantalla Completa"
+
+[node name="FullscreenCheckBox" type="CheckBox"]
+layout_mode = 2
+
+[node name="ResolutionContainer" type="HBoxContainer"]
+layout_mode = 2
+
+[node name="ResolutionLabel" type="Label"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Resolución"
+
+[node name="ResolutionOption" type="OptionButton"]
+layout_mode = 2
+item_count = 5
+selected = 0
+popup/item_0/text = "1280x720"
+popup/item_0/id = 0
+popup/item_1/text = "1366x768"
+popup/item_1/id = 1
+popup/item_2/text = "1600x900"
+popup/item_2/id = 2
+popup/item_3/text = "1920x1080"
+popup/item_3/id = 3
+popup/item_4/text = "2560x1440"
+popup/item_4/id = 4
+
+[node name="VsyncContainer" type="HBoxContainer"]
+layout_mode = 2
+
+[node name="VsyncLabel" type="Label"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Sincronización Vertical (VSync)"
+
+[node name="VsyncCheckBox" type="CheckBox"]
+layout_mode = 2
+
+[node name="AudioTab" type="TabBar"]
+visible = false
+layout_mode = 2
+tab_title = "Audio"
+
+[node name="VBoxContainer" type="VBoxContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="MasterVolumeContainer" type="VBoxContainer"]
+layout_mode = 2
+
+[node name="MasterVolumeLabel" type="Label"]
+layout_mode = 2
+text = "Volumen Principal"
+
+[node name="MasterVolumeSlider" type="HSlider"]
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.8
+
+[node name="MusicVolumeContainer" type="VBoxContainer"]
+layout_mode = 2
+
+[node name="MusicVolumeLabel" type="Label"]
+layout_mode = 2
+text = "Volumen de Música"
+
+[node name="MusicVolumeSlider" type="HSlider"]
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.8
+
+[node name="SfxVolumeContainer" type="VBoxContainer"]
+layout_mode = 2
+
+[node name="SfxVolumeLabel" type="Label"]
+layout_mode = 2
+text = "Volumen de Efectos"
+
+[node name="SfxVolumeSlider" type="HSlider"]
+layout_mode = 2
+max_value = 1.0
+step = 0.01
+value = 0.8
+
+[node name="MuteContainer" type="HBoxContainer"]
+layout_mode = 2
+
+[node name="MuteLabel" type="Label"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Silenciar Todo"
+
+[node name="MuteCheckBox" type="CheckBox"]
+layout_mode = 2
+
+[node name="GameplayTab" type="TabBar"]
+visible = false
+layout_mode = 2
+tab_title = "Jugabilidad"
+
+[node name="VBoxContainer" type="VBoxContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="ShowLegalMovesContainer" type="HBoxContainer"]
+layout_mode = 2
+
+[node name="ShowLegalMovesLabel" type="Label"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Mostrar Movimientos Legales"
+
+[node name="ShowLegalMovesCheckBox" type="CheckBox"]
+layout_mode = 2
+button_pressed = true
+
+[node name="ShowLastMoveContainer" type="HBoxContainer"]
+layout_mode = 2
+
+[node name="ShowLastMoveLabel" type="Label"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Mostrar Último Movimiento"
+
+[node name="ShowLastMoveCheckBox" type="CheckBox"]
+layout_mode = 2
+button_pressed = true
+
+[node name="ShowCheckIndicatorContainer" type="HBoxContainer"]
+layout_mode = 2
+
+[node name="ShowCheckIndicatorLabel" type="Label"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Mostrar Indicador de Jaque"
+
+[node name="ShowCheckIndicatorCheckBox" type="CheckBox"]
+layout_mode = 2
+button_pressed = true
+
+[node name="AutoQueenPromotionContainer" type="HBoxContainer"]
+layout_mode = 2
+
+[node name="AutoQueenPromotionLabel" type="Label"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Promoción Automática a Reina"
+
+[node name="AutoQueenPromotionCheckBox" type="CheckBox"]
+layout_mode = 2
+button_pressed = true
+
+[node name="AnimationSpeedContainer" type="VBoxContainer"]
+layout_mode = 2
+
+[node name="AnimationSpeedLabel" type="Label"]
+layout_mode = 2
+text = "Velocidad de Animación"
+
+[node name="AnimationSpeedSlider" type="HSlider"]
+layout_mode = 2
+min_value = 0.5
+max_value = 2.0
+step = 0.1
+value = 1.0
+
+[node name="AccessibilityTab" type="TabBar"]
+visible = false
+layout_mode = 2
+tab_title = "Accesibilidad"
+
+[node name="VBoxContainer" type="VBoxContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="HighContrastContainer" type="HBoxContainer"]
+layout_mode = 2
+
+[node name="HighContrastLabel" type="Label"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Alto Contraste"
+
+[node name="HighContrastCheckBox" type="CheckBox"]
+layout_mode = 2
+
+[node name="LargeUIContainer" type="HBoxContainer"]
+layout_mode = 2
+
+[node name="LargeUILabel" type="Label"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "UI Grande"
+
+[node name="LargeUICheckBox" type="CheckBox"]
+layout_mode = 2
+
+[node name="TextSizeContainer" type="VBoxContainer"]
+layout_mode = 2
+
+[node name="TextSizeLabel" type="Label"]
+layout_mode = 2
+text = "Tamaño de Texto"
+
+[node name="TextSizeSlider" type="HSlider"]
+layout_mode = 2
+min_value = 0.75
+max_value = 1.5
+step = 0.05
+value = 1.0
+
+[node name="ButtonsContainer" type="HBoxContainer"]
+layout_mode = 2
+alignment = 1
+
+[node name="SaveButton" type="Button"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "Guardar"
+
+[node name="ResetButton" type="Button"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "Restablecer"
+
+[node name="BackButton" type="Button"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "Volver"

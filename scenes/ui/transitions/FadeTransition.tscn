@@ -1,0 +1,75 @@
+[gd_scene load_steps=3 format=3 uid="uid://bxsj0b5k5u74o"]
+
+[sub_resource type="GDScript" id="GDScript_k8qsh"]
+script/source = "extends CanvasLayer
+
+signal transition_finished(scene_path)
+
+func start_transition():
+	$AnimationPlayer.play(\"fade_to_black\")
+
+func _on_animation_finished(anim_name):
+	if anim_name == \"fade_to_black\":
+		emit_signal(\"transition_finished\")
+		$AnimationPlayer.play(\"fade_from_black\")
+	elif anim_name == \"fade_from_black\":
+		queue_free()
+"
+
+[sub_resource type="Animation" id="Animation_jn2cv"]
+resource_name = "fade_to_black"
+length = 0.5
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("ColorRect:color")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Color(0, 0, 0, 0), Color(0, 0, 0, 1)]
+}
+
+[sub_resource type="Animation" id="Animation_vjuuh"]
+resource_name = "fade_from_black"
+length = 0.5
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("ColorRect:color")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.5),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Color(0, 0, 0, 1), Color(0, 0, 0, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_0g8bv"]
+_data = {
+"fade_from_black": SubResource("Animation_vjuuh"),
+"fade_to_black": SubResource("Animation_jn2cv")
+}
+
+[node name="FadeTransition" type="CanvasLayer"]
+layer = 10
+script = SubResource("GDScript_k8qsh")
+
+[node name="ColorRect" type="ColorRect"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+"": SubResource("AnimationLibrary_0g8bv")
+}
+
+[connection signal="animation_finished" from="AnimationPlayer" to="." method="_on_animation_finished"]

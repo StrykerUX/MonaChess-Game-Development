@@ -2,8 +2,8 @@ extends Node2D
 
 # Tablero de ajedrez para MonaChess
 # Implementa un tablero 8x8 con coordenadas estándar (A1-H8)
-# Versión 0.6.0
-# Incluye detección de jaque y jaque mate
+# Versión 0.8.0
+# Incluye detección de jaque y jaque mate, sistema de guardado
 
 # Constantes de configuración del tablero
 const BOARD_SIZE = 8
@@ -66,6 +66,11 @@ signal turn_changed(new_turn)
 signal check_detected(color)
 signal checkmate_detected(winner_color)
 signal stalemate_detected
+signal move_made(piece_info, from_pos, to_pos, is_capture, is_check, is_checkmate)
+signal piece_selected(position, piece_type, piece_color)
+signal invalid_selection(position, reason)
+signal game_saved(save_name)
+signal game_loaded(save_data)
 
 # Nodos del tablero
 @onready var board_grid = $BoardContainer/Board
@@ -98,7 +103,29 @@ func _ready():
 	if check_label:
 		check_label.visible = false
 	
+	# Conectar señales de input para guardado/carga
+	_connect_input_signals()
+	
 	print("Tablero de ajedrez inicializado correctamente")
+
+# Conecta las señales de input para guardar/cargar con teclas
+func _connect_input_signals():
+	var input_map = InputMap.get_action_list("save_game")
+	if input_map.size() > 0:
+		print("Conectando señal de guardado rápido (Ctrl+S)")
+	
+	var load_map = InputMap.get_action_list("load_game")
+	if load_map.size() > 0:
+		print("Conectando señal de carga rápida (Ctrl+L)")
+
+# Procesa input de teclado para guardar/cargar
+func _unhandled_input(event):
+	if event.is_action_pressed("save_game"):
+		quick_save()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("load_game"):
+		quick_load()
+		get_viewport().set_input_as_handled()
 
 # Inicializa la matriz del tablero con valores iniciales (todos 0 por ahora)
 func _initialize_board_matrix():
@@ -126,6 +153,38 @@ func _create_board_squares():
 			var is_dark = (row + col) % 2 == 1
 			square.color = DARK_SQUARE_COLOR if is_dark else LIGHT_SQUARE_COLOR
 			
+			# Añadir efecto de borde sutil para todas las casillas
+			var border_effect = ColorRect.new()
+			border_effect.name = "Border"
+			border_effect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			border_effect.size = Vector2(SQUARE_SIZE, SQUARE_SIZE)
+			border_effect.color = Color(0.0, 0.0, 0.0, 0.1)  # Borde sutil
+			border_effect.visible = false  # Inicialmente invisible
+			square.add_child(border_effect)
+			
+			# Añadir etiqueta para coordenadas
+			var label = Label.new()
+			label.name = "CoordLabel"
+			label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			label.text = _get_chess_notation(col, row)
+			label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+			label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+			label.scale = Vector2(0.7, 0.7)  # Tamaño reducido
+			label.position = Vector2(5, 5)  # Posición en la esquina
+			label.modulate.a = 0.0  # Inicialmente invisible
+			
+			# Añadir color según la casilla
+			if is_dark:
+				label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9, 0.8))
+			else:
+				label.add_theme_color_override("font_color", Color(0.2, 0.2, 0.2, 0.8))
+			
+			square.add_child(label)
+			
+			# Eventos de ratón para mostrar coordenadas al pasar el cursor
+			square.mouse_entered.connect(func(): _on_square_mouse_entered(square))
+			square.mouse_exited.connect(func(): _on_square_mouse_exited(square))
+			
 			# Asignar nombre para identificar la casilla (ej: "e4", "a1")
 			var coord = _get_chess_notation(col, row)
 			square.name = coord
@@ -134,6 +193,34 @@ func _create_board_squares():
 			board_grid.add_child(square)
 	
 	print("Casillas del tablero creadas")
+
+# Efectos visuales al pasar el ratón sobre una casilla
+func _on_square_mouse_entered(square):
+	var border = square.get_node("Border")
+	var label = square.get_node("CoordLabel")
+	
+	# Mostrar borde
+	if border:
+		border.visible = true
+	
+	# Mostrar etiqueta de coordenadas
+	if label:
+		var tween = create_tween()
+		tween.tween_property(label, "modulate:a", 0.8, 0.2)
+
+# Efectos visuales al salir el ratón de una casilla
+func _on_square_mouse_exited(square):
+	var border = square.get_node("Border")
+	var label = square.get_node("CoordLabel")
+	
+	# Ocultar borde
+	if border:
+		border.visible = false
+	
+	# Ocultar etiqueta de coordenadas
+	if label:
+		var tween = create_tween()
+		tween.tween_property(label, "modulate:a", 0.0, 0.2)
 
 # Convierte coordenadas de matriz (0-7, 0-7) a notación de ajedrez (a1-h8)
 func _get_chess_notation(col, row) -> String:
@@ -274,6 +361,19 @@ func select_piece(position: String) -> bool:
 		
 		# Verificar que la pieza corresponde al turno actual
 		if piece.piece_color != current_turn:
+			# Añadir feedback visual de turno incorrecto
+			_show_temporary_message("No es tu turno. Juegan las " + ("blancas" if current_turn == ChessPiece.PieceColor.WHITE else "negras"))
+			
+			# Efecto visual de selección inválida
+			var original_modulate = piece.modulate
+			piece.modulate = Color(1.0, 0.5, 0.5, 1.0)  # Tinte rojo
+			
+			# Restaurar después de un breve momento
+			await get_tree().create_timer(0.3).timeout
+			piece.modulate = original_modulate
+			
+			# Emitir señal de selección inválida
+			emit_signal("invalid_selection", position, "turno_incorrecto")
 			return false
 		
 		# Si ya hay una pieza seleccionada, deseleccionarla
@@ -286,6 +386,9 @@ func select_piece(position: String) -> bool:
 		
 		# Resaltar la casilla de la pieza seleccionada
 		_highlight_square(position, SELECTED_COLOR)
+		
+		# Emitir señal de pieza seleccionada
+		emit_signal("piece_selected", position, piece.piece_type, piece.piece_color)
 		
 		# Resaltar movimientos posibles
 		var valid_moves = selected_piece.get_valid_moves(board_matrix)
@@ -393,8 +496,13 @@ func process_click(click_position: Vector2):
 				_show_temporary_message("¡El rey quedaría en jaque!")
 				return
 			
+			# Guardar la información del movimiento para la señal
+			var piece_info = selected_piece.get_piece_type_name()[0]  # Primera letra del tipo de pieza
+			var from_pos = selected_piece.board_position
+			var is_capture = notation in pieces and pieces[notation] != null
+			
 			# Verificar si la casilla tiene una pieza para capturar
-			if notation in pieces and pieces[notation] != null:
+			if is_capture:
 				var piece_to_capture = pieces[notation]
 				# Solo capturar piezas del otro color
 				if piece_to_capture.piece_color != selected_piece.piece_color:
@@ -414,6 +522,22 @@ func process_click(click_position: Vector2):
 			
 			# Verificar estado del juego (jaque, jaque mate, etc.)
 			_check_game_status()
+			
+			# Variables para la señal
+			var is_check = is_white_in_check if current_turn == ChessPiece.PieceColor.BLACK else is_black_in_check
+			var is_checkmate = false
+			
+			# Verificar jaque mate y ahogado
+			if is_game_active:
+				if current_turn == ChessPiece.PieceColor.WHITE:
+					if is_white_in_check and ChessRules.is_checkmate(board_matrix, white_king_position, ChessPiece.PieceColor.WHITE, pieces):
+						is_checkmate = true
+				else:
+					if is_black_in_check and ChessRules.is_checkmate(board_matrix, black_king_position, ChessPiece.PieceColor.BLACK, pieces):
+						is_checkmate = true
+			
+			# Emitir señal del movimiento
+			emit_signal("move_made", piece_info, from_pos, notation, is_capture, is_check, is_checkmate)
 			
 			# Cambiar el turno solo si el juego sigue activo
 			if is_game_active:
@@ -435,6 +559,19 @@ func process_click(click_position: Vector2):
 			# Verificar que la pieza corresponde al turno actual
 			if piece.piece_color != current_turn:
 				print("No es tu turno: " + ("Esperando blancas" if current_turn == ChessPiece.PieceColor.WHITE else "Esperando negras"))
+				# Añadir feedback visual de turno incorrecto
+				_show_temporary_message("No es tu turno. Juegan las " + ("blancas" if current_turn == ChessPiece.PieceColor.WHITE else "negras"))
+				
+				# Efecto visual de selección inválida
+				var original_modulate = piece.modulate
+				piece.modulate = Color(1.0, 0.5, 0.5, 1.0)  # Tinte rojo
+				
+				# Restaurar después de un breve momento
+				await get_tree().create_timer(0.3).timeout
+				piece.modulate = original_modulate
+				
+				# Emitir señal de selección inválida
+				emit_signal("invalid_selection", notation, "turno_incorrecto")
 				return
 		
 		# Seleccionar la pieza en la posición del clic
@@ -825,3 +962,274 @@ func debug_print_board():
 	print("Rey negro en: " + black_king_position + " (En jaque: " + str(is_black_in_check) + ")")
 	print("Turno actual: " + ("Blancas" if current_turn == ChessPiece.PieceColor.WHITE else "Negras"))
 	print("Juego activo: " + str(is_game_active))
+
+# SISTEMA DE GUARDADO Y CARGA
+
+# Genera un diccionario con el estado actual del tablero para guardado
+func get_save_state() -> Dictionary:
+	var save_data = {
+		"board_matrix": board_matrix,
+		"current_turn": current_turn,
+		"white_king_position": white_king_position,
+		"black_king_position": black_king_position,
+		"is_white_in_check": is_white_in_check,
+		"is_black_in_check": is_black_in_check,
+		"is_game_active": is_game_active,
+		# Guardar piezas y sus posiciones
+		"pieces": {},
+		# Piezas capturadas
+		"white_captured": [],
+		"black_captured": []
+	}
+	
+	# Guardar información de cada pieza
+	for position in pieces:
+		var piece = pieces[position]
+		save_data["pieces"][position] = {
+			"type": piece.piece_type,
+			"color": piece.piece_color,
+			"has_moved": piece.has_moved
+		}
+	
+	# Guardar piezas capturadas (solo tipo y color)
+	for piece_data in white_captured_pieces:
+		save_data["white_captured"].append({
+			"type": piece_data.type,
+			"value": piece_data.value
+		})
+	
+	for piece_data in black_captured_pieces:
+		save_data["black_captured"].append({
+			"type": piece_data.type,
+			"value": piece_data.value
+		})
+	
+	return save_data
+
+# Carga un estado guardado del tablero
+func load_save_state(save_data: Dictionary) -> bool:
+	# Verificar que los datos son válidos
+	if not save_data.has("board_matrix") or not save_data.has("pieces"):
+		push_error("Datos de guardado inválidos o incompletos")
+		return false
+	
+	# Limpiar el tablero actual
+	for position in pieces:
+		if pieces[position] != null:
+			pieces[position].queue_free()
+	pieces.clear()
+	
+	# Limpiar piezas capturadas
+	for piece_data in white_captured_pieces:
+		if piece_data.has("sprite") and is_instance_valid(piece_data.sprite):
+			piece_data.sprite.queue_free()
+	white_captured_pieces.clear()
+	
+	for piece_data in black_captured_pieces:
+		if piece_data.has("sprite") and is_instance_valid(piece_data.sprite):
+			piece_data.sprite.queue_free()
+	black_captured_pieces.clear()
+	
+	# Limpiar visualmente los paneles de piezas capturadas
+	for child in white_captured_grid.get_children():
+		child.queue_free()
+	
+	for child in black_captured_grid.get_children():
+		child.queue_free()
+	
+	# Cargar estado básico
+	board_matrix = save_data.board_matrix.duplicate(true)
+	current_turn = save_data.current_turn
+	white_king_position = save_data.white_king_position
+	black_king_position = save_data.black_king_position
+	is_white_in_check = save_data.is_white_in_check
+	is_black_in_check = save_data.is_black_in_check
+	is_game_active = save_data.is_game_active
+	
+	# Recrear piezas
+	for position in save_data.pieces:
+		var piece_data = save_data.pieces[position]
+		var piece_type = piece_data.type
+		var piece_scene
+		
+		# Seleccionar la escena correcta según el tipo
+		match piece_type:
+			ChessPiece.PieceType.PAWN:
+				piece_scene = PAWN_SCENE
+			ChessPiece.PieceType.KNIGHT:
+				piece_scene = KNIGHT_SCENE
+			ChessPiece.PieceType.BISHOP:
+				piece_scene = BISHOP_SCENE
+			ChessPiece.PieceType.ROOK:
+				piece_scene = ROOK_SCENE
+			ChessPiece.PieceType.QUEEN:
+				piece_scene = QUEEN_SCENE
+			ChessPiece.PieceType.KING:
+				piece_scene = KING_SCENE
+		
+		# Crear la pieza
+		var piece = _create_piece(piece_scene, piece_data.color, position)
+		
+		# Establecer si la pieza ya se ha movido
+		piece.has_moved = piece_data.has_moved
+	
+	# Recrear piezas capturadas
+	if save_data.has("white_captured"):
+		for piece_data in save_data.white_captured:
+			_add_captured_piece(piece_data.type, piece_data.value, ChessPiece.PieceColor.BLACK)
+	
+	if save_data.has("black_captured"):
+		for piece_data in save_data.black_captured:
+			_add_captured_piece(piece_data.type, piece_data.value, ChessPiece.PieceColor.WHITE)
+	
+	# Actualizar visualización
+	_update_turn_label()
+	_update_check_status()
+	_update_captured_panels()
+	
+	# Mostrar mensaje informativo
+	_show_temporary_message("Partida cargada correctamente")
+	
+	# Emitir señal
+	emit_signal("game_loaded", save_data)
+	
+	return true
+
+# Método auxiliar para añadir una pieza capturada
+func _add_captured_piece(piece_type: int, piece_value: int, captured_by_color: int) -> void:
+	# Crear sprite para la pieza capturada
+	var captured_piece_sprite = Sprite2D.new()
+	
+	# Determinar qué textura usar según el tipo de pieza
+	var texture_path = ""
+	var piece_color = ChessPiece.PieceColor.BLACK if captured_by_color == ChessPiece.PieceColor.WHITE else ChessPiece.PieceColor.WHITE
+	
+	match piece_type:
+		ChessPiece.PieceType.PAWN:
+			if ResourceManager.get_texture("white_pawn") and piece_color == ChessPiece.PieceColor.WHITE:
+				captured_piece_sprite.texture = ResourceManager.get_texture("white_pawn")
+			elif ResourceManager.get_texture("black_pawn") and piece_color == ChessPiece.PieceColor.BLACK:
+				captured_piece_sprite.texture = ResourceManager.get_texture("black_pawn")
+		ChessPiece.PieceType.KNIGHT:
+			if ResourceManager.get_texture("white_knight") and piece_color == ChessPiece.PieceColor.WHITE:
+				captured_piece_sprite.texture = ResourceManager.get_texture("white_knight")
+			elif ResourceManager.get_texture("black_knight") and piece_color == ChessPiece.PieceColor.BLACK:
+				captured_piece_sprite.texture = ResourceManager.get_texture("black_knight")
+		ChessPiece.PieceType.BISHOP:
+			if ResourceManager.get_texture("white_bishop") and piece_color == ChessPiece.PieceColor.WHITE:
+				captured_piece_sprite.texture = ResourceManager.get_texture("white_bishop")
+			elif ResourceManager.get_texture("black_bishop") and piece_color == ChessPiece.PieceColor.BLACK:
+				captured_piece_sprite.texture = ResourceManager.get_texture("black_bishop")
+		ChessPiece.PieceType.ROOK:
+			if ResourceManager.get_texture("white_rook") and piece_color == ChessPiece.PieceColor.WHITE:
+				captured_piece_sprite.texture = ResourceManager.get_texture("white_rook")
+			elif ResourceManager.get_texture("black_rook") and piece_color == ChessPiece.PieceColor.BLACK:
+				captured_piece_sprite.texture = ResourceManager.get_texture("black_rook")
+		ChessPiece.PieceType.QUEEN:
+			if ResourceManager.get_texture("white_queen") and piece_color == ChessPiece.PieceColor.WHITE:
+				captured_piece_sprite.texture = ResourceManager.get_texture("white_queen")
+			elif ResourceManager.get_texture("black_queen") and piece_color == ChessPiece.PieceColor.BLACK:
+				captured_piece_sprite.texture = ResourceManager.get_texture("black_queen")
+		ChessPiece.PieceType.KING:
+			if ResourceManager.get_texture("white_king") and piece_color == ChessPiece.PieceColor.WHITE:
+				captured_piece_sprite.texture = ResourceManager.get_texture("white_king")
+			elif ResourceManager.get_texture("black_king") and piece_color == ChessPiece.PieceColor.BLACK:
+				captured_piece_sprite.texture = ResourceManager.get_texture("black_king")
+	
+	captured_piece_sprite.scale = Vector2(0.4, 0.4) # Reducir tamaño para el panel
+	
+	# Añadir la pieza capturada a la lista correspondiente
+	if captured_by_color == ChessPiece.PieceColor.WHITE:
+		white_captured_pieces.append({
+			"type": piece_type,
+			"value": piece_value,
+			"sprite": captured_piece_sprite
+		})
+		white_captured_grid.add_child(captured_piece_sprite)
+	else:
+		black_captured_pieces.append({
+			"type": piece_type,
+			"value": piece_value,
+			"sprite": captured_piece_sprite
+		})
+		black_captured_grid.add_child(captured_piece_sprite)
+
+# Guarda la partida actual en un archivo
+func save_game(save_name: String = "") -> bool:
+	# Obtener el estado actual del tablero
+	var save_data = get_save_state()
+	
+	# Usar el SaveManager para guardar la partida
+	if SaveManager.save_game(save_data, save_name):
+		_show_temporary_message("Partida guardada correctamente" + (" como '" + save_name + "'" if !save_name.is_empty() else ""))
+		emit_signal("game_saved", save_name)
+		return true
+	else:
+		_show_temporary_message("Error al guardar la partida")
+		return false
+
+# Carga una partida guardada
+func load_game(save_name: String) -> bool:
+	# Usar el SaveManager para cargar la partida
+	var save_data = SaveManager.load_game(save_name)
+	
+	if save_data.is_empty():
+		_show_temporary_message("Error al cargar la partida")
+		return false
+	else:
+		return load_save_state(save_data)
+
+# Guardado rápido
+func quick_save() -> bool:
+	return save_game("quicksave")
+
+# Carga rápida
+func quick_load() -> bool:
+	return load_game("quicksave")
+
+# Reinicia el tablero a su estado inicial
+func reset_board() -> void:
+	# Limpiar el estado actual
+	for position in pieces:
+		if pieces[position] != null:
+			pieces[position].queue_free()
+	pieces.clear()
+	
+	# Limpiar piezas capturadas
+	for piece_data in white_captured_pieces:
+		if piece_data.has("sprite") and is_instance_valid(piece_data.sprite):
+			piece_data.sprite.queue_free()
+	white_captured_pieces.clear()
+	
+	for piece_data in black_captured_pieces:
+		if piece_data.has("sprite") and is_instance_valid(piece_data.sprite):
+			piece_data.sprite.queue_free()
+	black_captured_pieces.clear()
+	
+	# Limpiar visualmente los paneles de piezas capturadas
+	for child in white_captured_grid.get_children():
+		child.queue_free()
+	
+	for child in black_captured_grid.get_children():
+		child.queue_free()
+	
+	# Reiniciar variables de estado
+	current_turn = ChessPiece.PieceColor.WHITE
+	is_game_active = true
+	is_white_in_check = false
+	is_black_in_check = false
+	white_king_position = "e1"
+	black_king_position = "e8"
+	
+	# Reiniciar tablero
+	_initialize_board_matrix()
+	_setup_initial_pieces()
+	
+	# Actualizar UI
+	_update_turn_label()
+	
+	# Limpiar mensajes
+	if check_label:
+		check_label.visible = false
+	
+	_show_temporary_message("Tablero reiniciado")

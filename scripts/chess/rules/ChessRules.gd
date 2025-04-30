@@ -3,7 +3,7 @@ class_name ChessRules
 
 # Reglas básicas de ajedrez para MonaChess
 # Implementa verificación de jaque y jaque mate
-# Versión 0.6.0
+# Versión 0.8.0
 
 # Constantes
 const BOARD_SIZE = 8
@@ -17,58 +17,124 @@ static func is_in_check(board_matrix: Array, king_position: String, king_color: 
 		push_error("Posición inválida del rey: " + king_position)
 		return false
 	
-	# Verificar si alguna pieza enemiga puede atacar la posición del rey
-	for row in range(BOARD_SIZE):
-		for col in range(BOARD_SIZE):
-			var piece_value = board_matrix[row][col]
+	# 1. Verificar ataques de peones
+	var pawn_direction = 1 if king_color == ChessPiece.PieceColor.WHITE else -1
+	for offset in [Vector2(-1, pawn_direction), Vector2(1, pawn_direction)]:
+		var check_x = king_pos.x + offset.x
+		var check_y = king_pos.y + offset.y
+		
+		if check_x >= 0 and check_x < BOARD_SIZE and check_y >= 0 and check_y < BOARD_SIZE:
+			var piece_value = board_matrix[check_y][check_x]
 			
-			# Si la casilla está vacía, continuar
-			if piece_value == 0:
-				continue
-			
-			# Determinar el color de la pieza
+			# Verificar si hay un peón enemigo
+			if (king_color == ChessPiece.PieceColor.WHITE and piece_value == -ChessPiece.PieceType.PAWN) or \
+			   (king_color == ChessPiece.PieceColor.BLACK and piece_value == ChessPiece.PieceType.PAWN):
+				return true
+	
+	# 2. Verificar ataques de caballos
+	var knight_offsets = [
+		Vector2(1, 2), Vector2(2, 1), Vector2(2, -1), Vector2(1, -2),
+		Vector2(-1, -2), Vector2(-2, -1), Vector2(-2, 1), Vector2(-1, 2)
+	]
+	
+	for offset in knight_offsets:
+		var check_x = king_pos.x + offset.x
+		var check_y = king_pos.y + offset.y
+		
+		if check_x >= 0 and check_x < BOARD_SIZE and check_y >= 0 and check_y < BOARD_SIZE:
+			var piece_value = board_matrix[check_y][check_x]
+			var piece_type = abs(piece_value)
 			var piece_color = ChessPiece.PieceColor.WHITE if piece_value > 0 else ChessPiece.PieceColor.BLACK
 			
-			# Si es del mismo color que el rey, no puede ponerlo en jaque
-			if piece_color == king_color:
-				continue
-			
-			# Obtener la posición de la pieza en notación algebraica
-			var piece_position = ChessUtils.coords_to_algebraic(Vector2(col, row))
-			
-			# Determinar tipo de pieza y verificar si puede atacar al rey
+			# Verificar si hay un caballo enemigo
+			if piece_type == ChessPiece.PieceType.KNIGHT and piece_color != king_color:
+				return true
+	
+	# 3. Verificar ataques de rey
+	var king_offsets = [
+		Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), Vector2(1, -1),
+		Vector2(0, -1), Vector2(-1, -1), Vector2(-1, 0), Vector2(-1, 1)
+	]
+	
+	for offset in king_offsets:
+		var check_x = king_pos.x + offset.x
+		var check_y = king_pos.y + offset.y
+		
+		if check_x >= 0 and check_x < BOARD_SIZE and check_y >= 0 and check_y < BOARD_SIZE:
+			var piece_value = board_matrix[check_y][check_x]
 			var piece_type = abs(piece_value)
-			if piece_type == ChessPiece.PieceType.PAWN:
-				# Para el peón, verificar si puede capturar al rey
-				if _can_pawn_attack(board_matrix, piece_position, king_position, piece_color):
+			var piece_color = ChessPiece.PieceColor.WHITE if piece_value > 0 else ChessPiece.PieceColor.BLACK
+			
+			# Verificar si hay un rey enemigo
+			if piece_type == ChessPiece.PieceType.KING and piece_color != king_color:
+				return true
+	
+	# 4. Verificar ataques de torres y reinas (horizontal y vertical)
+	var rook_directions = [Vector2(0, 1), Vector2(1, 0), Vector2(0, -1), Vector2(-1, 0)]
+	
+	for direction in rook_directions:
+		var check_x = king_pos.x
+		var check_y = king_pos.y
+		
+		while true:
+			check_x += direction.x
+			check_y += direction.y
+			
+			# Si sale del tablero, romper el ciclo
+			if check_x < 0 or check_x >= BOARD_SIZE or check_y < 0 or check_y >= BOARD_SIZE:
+				break
+			
+			var piece_value = board_matrix[check_y][check_x]
+			
+			# Si hay una pieza en el camino
+			if piece_value != 0:
+				var piece_type = abs(piece_value)
+				var piece_color = ChessPiece.PieceColor.WHITE if piece_value > 0 else ChessPiece.PieceColor.BLACK
+				
+				# Si es una torre o reina enemiga, está en jaque
+				if (piece_type == ChessPiece.PieceType.ROOK or piece_type == ChessPiece.PieceType.QUEEN) and \
+				   piece_color != king_color:
 					return true
-			elif piece_type == ChessPiece.PieceType.KNIGHT:
-				# Para el caballo, verificar si puede atacar al rey
-				if _can_knight_attack(board_matrix, piece_position, king_position):
+				
+				# Si es otra pieza, bloquea la línea
+				break
+	
+	# 5. Verificar ataques de alfiles y reinas (diagonal)
+	var bishop_directions = [Vector2(1, 1), Vector2(1, -1), Vector2(-1, -1), Vector2(-1, 1)]
+	
+	for direction in bishop_directions:
+		var check_x = king_pos.x
+		var check_y = king_pos.y
+		
+		while true:
+			check_x += direction.x
+			check_y += direction.y
+			
+			# Si sale del tablero, romper el ciclo
+			if check_x < 0 or check_x >= BOARD_SIZE or check_y < 0 or check_y >= BOARD_SIZE:
+				break
+			
+			var piece_value = board_matrix[check_y][check_x]
+			
+			# Si hay una pieza en el camino
+			if piece_value != 0:
+				var piece_type = abs(piece_value)
+				var piece_color = ChessPiece.PieceColor.WHITE if piece_value > 0 else ChessPiece.PieceColor.BLACK
+				
+				# Si es un alfil o reina enemiga, está en jaque
+				if (piece_type == ChessPiece.PieceType.BISHOP or piece_type == ChessPiece.PieceType.QUEEN) and \
+				   piece_color != king_color:
 					return true
-			elif piece_type == ChessPiece.PieceType.BISHOP:
-				# Para el alfil, verificar si puede atacar al rey
-				if _can_bishop_attack(board_matrix, piece_position, king_position):
-					return true
-			elif piece_type == ChessPiece.PieceType.ROOK:
-				# Para la torre, verificar si puede atacar al rey
-				if _can_rook_attack(board_matrix, piece_position, king_position):
-					return true
-			elif piece_type == ChessPiece.PieceType.QUEEN:
-				# Para la reina, verificar si puede atacar al rey (combinación de torre y alfil)
-				if _can_queen_attack(board_matrix, piece_position, king_position):
-					return true
-			elif piece_type == ChessPiece.PieceType.KING:
-				# Para el rey, verificar si puede atacar al rey (solo posiciones adyacentes)
-				if _can_king_attack(board_matrix, piece_position, king_position):
-					return true
+				
+				# Si es otra pieza, bloquea la línea
+				break
 	
 	# Si ninguna pieza puede atacar al rey, no está en jaque
 	return false
 
 # Verifica si un rey está en jaque mate
 static func is_checkmate(board_matrix: Array, king_position: String, king_color: int, pieces: Dictionary) -> bool:
-	# Primero verificar si el rey está en jaque
+	# Primero verificar si el rey está en jaque (usar la función optimizada)
 	if !is_in_check(board_matrix, king_position, king_color):
 		return false
 	
@@ -86,9 +152,6 @@ static func is_checkmate(board_matrix: Array, king_position: String, king_color:
 			# Simular el movimiento
 			var temp_board = _copy_board_matrix(board_matrix)
 			var piece_value = _get_piece_value(temp_board, position)
-			
-			# Si el destino tiene una pieza, simular su captura
-			var is_capture = _get_piece_value(temp_board, move) != 0
 			
 			# Realizar el movimiento en el tablero temporal
 			_set_piece_value(temp_board, position, 0)
@@ -211,7 +274,8 @@ static func _can_bishop_attack(board_matrix: Array, bishop_position: String, tar
 	var curr_x = bishop_pos.x + x_step
 	var curr_y = bishop_pos.y + y_step
 	
-	while curr_x != target_pos.x and curr_y != target_pos.y:
+	# CORRECCIÓN: En diagonal x e y avanzan igual, por lo que basta verificar x
+	while curr_x != target_pos.x:
 		if board_matrix[curr_y][curr_x] != 0:
 			return false  # Hay una pieza en el camino
 		curr_x += x_step

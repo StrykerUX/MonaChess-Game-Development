@@ -1,0 +1,73 @@
+[gd_scene load_steps=2 format=3 uid="uid://c0qogcuq7ahfj"]
+
+[ext_resource type="Script" path="res://scripts/ui/MoveHistory.gd" id="1_i34f8"]
+
+[node name="MoveHistory" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_i34f8")
+
+[node name="Panel" type="PanelContainer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer"]
+layout_mode = 2
+
+[node name="HeaderContainer" type="HBoxContainer"]
+layout_mode = 2
+
+[node name="Title" type="Label"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "Historial de Movimientos"
+
+[node name="ClearButton" type="Button"]
+layout_mode = 2
+text = "Limpiar"
+
+[node name="HSeparator" type="HSeparator"]
+layout_mode = 2
+
+[node name="HeaderRow" type="HBoxContainer"]
+layout_mode = 2
+
+[node name="NumLabel" type="Label"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.2
+text = "#"
+horizontal_alignment = 1
+
+[node name="WhiteLabel" type="Label"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.4
+text = "Blancas"
+horizontal_alignment = 1
+
+[node name="BlackLabel" type="Label"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.4
+text = "Negras"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="MoveHistoryContainer" type="VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3

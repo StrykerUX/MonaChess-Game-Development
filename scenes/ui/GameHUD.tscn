@@ -1,0 +1,196 @@
+[gd_scene load_steps=2 format=3 uid="uid://d3pqynsxgpexe"]
+
+[ext_resource type="Script" path="res://scripts/ui/GameHUD.gd" id="1_qrdj7"]
+
+[node name="GameHUD" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_qrdj7")
+
+[node name="TopBar" type="PanelContainer"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 50.0
+grow_horizontal = 2
+
+[node name="HBoxContainer" type="HBoxContainer"]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 5
+
+[node name="GameTitle" type="Label"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+text = "MonaChess"
+vertical_alignment = 1
+
+[node name="ButtonsContainer" type="HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="PauseButton" type="Button"]
+layout_mode = 2
+text = "Pausar"
+
+[node name="SettingsButton" type="Button"]
+layout_mode = 2
+text = "Ajustes"
+
+[node name="RestartButton" type="Button"]
+layout_mode = 2
+text = "Reiniciar"
+
+[node name="MarginContainer2" type="MarginContainer"]
+layout_mode = 2
+theme_override_constants/margin_right = 10
+
+[node name="SidePanel" type="VBoxContainer"]
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -250.0
+offset_top = 50.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="GameStatusPanel" type="PanelContainer"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="VBoxContainer" type="VBoxContainer"]
+layout_mode = 2
+
+[node name="HeaderLabel" type="Label"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Estado de la Partida"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator"]
+layout_mode = 2
+
+[node name="TurnIndicator" type="Label"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Turno: Blancas"
+horizontal_alignment = 1
+
+[node name="StatusLabel" type="Label"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "¡Partida iniciada!"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="PlayersInfoPanel" type="PanelContainer"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="VBoxContainer" type="VBoxContainer"]
+layout_mode = 2
+
+[node name="HeaderLabel" type="Label"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Jugadores"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator"]
+layout_mode = 2
+
+[node name="WhitePlayerInfo" type="HBoxContainer"]
+layout_mode = 2
+
+[node name="ColorLabel" type="Label"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Blancas"
+
+[node name="TimeLabel" type="Label"]
+layout_mode = 2
+text = "30:00"
+horizontal_alignment = 2
+
+[node name="BlackPlayerInfo" type="HBoxContainer"]
+layout_mode = 2
+
+[node name="ColorLabel" type="Label"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Negras"
+
+[node name="TimeLabel" type="Label"]
+layout_mode = 2
+text = "30:00"
+horizontal_alignment = 2
+
+[node name="MoveHistoryPanel" type="PanelContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="VBoxContainer" type="VBoxContainer"]
+layout_mode = 2
+
+[node name="HeaderContainer" type="HBoxContainer"]
+layout_mode = 2
+
+[node name="HeaderLabel" type="Label"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "Historial de Movimientos"
+
+[node name="ClearButton" type="Button"]
+layout_mode = 2
+text = "Limpiar"
+
+[node name="HSeparator" type="HSeparator"]
+layout_mode = 2
+
+[node name="HeaderRow" type="HBoxContainer"]
+layout_mode = 2
+
+[node name="NumLabel" type="Label"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.2
+text = "#"
+horizontal_alignment = 1
+
+[node name="WhiteLabel" type="Label"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.4
+text = "Blancas"
+horizontal_alignment = 1
+
+[node name="BlackLabel" type="Label"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.4
+text = "Negras"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="MoveHistoryContainer" type="VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3

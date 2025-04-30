@@ -1,5 +1,59 @@
 # Registro de Cambios - MonaChess
 
+## v0.8.0 - MVP Jugable (Mayo 30, 2025)
+
+### Añadido
+- Sistema de guardado y carga de partidas
+- Notificaciones mejoradas con diferentes tipos y efectos visuales
+- Historial detallado de movimientos con notación de ajedrez
+- Efectos visuales más claros para movimientos y eventos importantes
+- Soporte para mostrar coordenadas del tablero al pasar el ratón
+- Tutoriales contextuales para nuevos jugadores
+- Clase ResourceManager para gestión optimizada de recursos
+- Sistema ObjectPoolManager para gestión eficiente de objetos
+
+### Cambiado
+- Optimización de algoritmos críticos (verificación de jaque/jaque mate)
+- Interfaz de partida mejorada con más información y mejor diseño
+- Efectos visuales rediseñados para mejor rendimiento y estética
+- Mejora significativa de feedback para acciones inválidas
+- Menú de pausa con transiciones fluidas y efecto de desenfoque
+- Optimización general de rendimiento para dispositivos de gama media
+
+### Errores Corregidos
+- Bug en la verificación de camino para movimientos de alfil
+- Bug en la validación de algunos movimientos de torre
+- Problema de feedback al seleccionar piezas de color incorrecto
+- Fugas de memoria en efectos visuales repetitivos
+- Problemas de detección de tablas en algunos casos específicos
+- Inconsistencias visuales en diferentes resoluciones
+
+## v0.7.0 - UI Mínima Funcional (Mayo 15, 2025)
+
+### Añadido
+- Menú principal con animaciones y diseño mejorado
+- Sistema de pausa con opciones completas
+- Panel de estado del juego con información detallada
+- Historial de movimientos en notación de ajedrez
+- Cronometraje para cada jugador con advertencias visuales
+- Menú de ajustes con múltiples opciones de configuración
+- Sistema de notificaciones dinámicas
+- Pantalla de fin de partida con animaciones
+- Transiciones suaves entre escenas
+- Sistema de temas visuales consistente
+
+### Cambiado
+- Estructura de la interfaz de usuario completamente renovada
+- Integración mejorada entre el tablero y la UI
+- Optimización de la experiencia de usuario
+- Sistema de manejo de eventos del juego
+- Mejoras en la navegación y flujo de usuarios
+
+### Errores Corregidos
+- Problemas de visualización en diferentes resoluciones
+- Problemas con el cambio de estado del juego
+- Comportamiento inconsistente de la UI durante eventos del juego
+
 ## v0.6.0 - Reglas Básicas de Ajedrez (Abril 28, 2025)
 
 ### Añadido

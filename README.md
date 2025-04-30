@@ -1,6 +1,6 @@
 # MonaChess - Ajedrez de Monas Chinas
 
-![Estado de Desarrollo](https://img.shields.io/badge/Estado-Versión%200.6.0-green)
+![Estado de Desarrollo](https://img.shields.io/badge/Estado-Versión%200.7.0-green)
 ![Godot Version](https://img.shields.io/badge/Godot-v4.2%2B-blue)
 ![Licencia](https://img.shields.io/badge/Licencia-MIT-green)
 
@@ -8,16 +8,17 @@
 
 MonaChess es un juego de ajedrez con estética anime, desarrollado en Godot Engine 4.2+. Implementa todas las reglas estándar del ajedrez, combinadas con efectos visuales de estilo anime, múltiples temas visuales y un sistema de progresión.
 
-### 🚧 Estado Actual: Versión 0.6.0 - Reglas Básicas de Ajedrez
+### 🚧 Estado Actual: Versión 0.7.0 - UI Mínima Funcional
 
 Esta versión incluye:
-- Implementación completa del sistema de detección de jaque
-- Validación avanzada de movimientos para prevenir jaque al rey propio
-- Detección de jaque mate con finalización automática del juego
-- Detección de ahogado (stalemate) como condición de tablas
-- Efectos visuales mejorados para situaciones de jaque y mate
-- Sistema de mensajes de estado del juego
-- Interfaz actualizada para mostrar eventos importantes
+- Menú principal completo con animaciones y transiciones fluidas
+- Sistema de pausa durante el juego con opciones de reanudar, reiniciar o salir
+- Panel de estado del juego con historial de movimientos
+- Cronometraje para cada jugador con indicadores visuales
+- Menú de ajustes con opciones para video, audio, jugabilidad y accesibilidad
+- Sistema de notificaciones para informar al usuario sobre eventos del juego
+- Pantalla de fin de partida con resultados y opciones de continuación
+- Sistema de temas visuales y diseño coherente en toda la interfaz
 
 ## 🎯 Características Planeadas
 
@@ -105,8 +106,8 @@ MonaChess/
 - **0.3.0**: ✅ Movimientos Básicos
 - **0.4.0**: ✅ Sistema de Turnos
 - **0.5.0**: ✅ Capturas
-- **0.6.0**: ✅ Reglas Básicas de Ajedrez (actual)
-- **0.7.0**: UI Mínima Funcional
+- **0.6.0**: ✅ Reglas Básicas de Ajedrez
+- **0.7.0**: ✅ UI Mínima Funcional (actual)
 - **0.8.0**: MVP Jugable
 - **1.0.0**: MVP Completo
 
