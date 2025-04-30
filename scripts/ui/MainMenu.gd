@@ -36,11 +36,11 @@ func _input(event):
 	# Habilitar navegación con teclas
 	if event is InputEventKey and event.pressed:
 		match event.keycode:
-			KEY_UP:
+			Key.UP:
 				_navigate_up()
-			KEY_DOWN:
+			Key.DOWN:
 				_navigate_down()
-			KEY_RETURN, KEY_ENTER, KEY_SPACE:
+			Key.ENTER, Key.SPACE:
 				_activate_focused_button()
 
 # Navegar hacia arriba en los botones

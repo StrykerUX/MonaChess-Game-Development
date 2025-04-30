@@ -26,7 +26,7 @@ func _ready():
 # Función que se ejecuta en cada frame
 func _process(_delta):
 	# Verificar si se hizo clic en el tablero
-	if Input.is_action_just_pressed("ui_accept") or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+	if Input.is_action_just_pressed("ui_accept") or Input.is_mouse_button_pressed(MouseButton.LEFT):
 		if chess_board:
 			# Pasar la posición del clic al tablero
 			chess_board.process_click(get_global_mouse_position())
